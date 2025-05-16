@@ -5,6 +5,8 @@
 [![Documentation Status](https://readthedocs.org/projects/fishereyes/badge/)](https://fishereyes.readthedocs.io/)
 [![codecov](https://codecov.io/gh/william-h-oliver/fishereyes/branch/main/graph/badge.svg)](https://codecov.io/gh/william-h-oliver/fishereyes)
 
+The fishereyes package provides tools to learn smooth, invertible transformations of data where each point represents a measurement and is associated with its own uncertainty in the form of a covariance matrix. It enables the transformation of locally anisotropic data into a space where push-forward uncertainties are isotropic and uniform. The core FisherEyes class offers a modular interface to plug in different transformation models, loss functions, and optimizers -- supporting uncertainty-aware learning in a wide range of scientific and machine learning tasks.
+
 ## Installation
 
 The Python package `fishereyes` can be installed from PyPI:
