@@ -14,7 +14,7 @@ class FisherEyes:
         loss_fn,
         epochs,
         batch_size,
-        config,
+        config={},
     ):
         # Core components
         self.model = model
