@@ -1,0 +1,14 @@
+model:
+  name: mlp
+  params:
+    hidden_dims: [64, 64]
+    activation: None
+
+optimizer:
+  name: adam
+  params:
+    lr: 1e-3
+
+training:
+  epochs: 100
+  batch_size: 32
