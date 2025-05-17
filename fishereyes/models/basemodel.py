@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from omegaconf import DictConfig
-from fishereyes.models.registry import MODEL_REGISTRY
 
 
 class ConfigurableModel(ABC):
@@ -14,6 +13,7 @@ class ConfigurableModel(ABC):
         Instantiate the model from a nested OmegaConf config dictionary.
         Supports recursive instantiation of submodels if specified.
         """
+        from fishereyes.models.registry import MODEL_REGISTRY
         config = dict(config)  # Ensure normal dict
 
         submodels = {}
