@@ -50,6 +50,12 @@ class FisherEyes:
         model_cls = MODEL_REGISTRY[config.model.name]
         model = model_cls(**config.model.params)
 
+        if hasattr(model_cls, "from_config"):
+            data_dim = config.training.get("data_dim", 2)
+            model = model_cls.from_config(dict(config.model.params), data_dim=data_dim)
+        else:
+            model = model_cls(**config.model.params)
+
         # === Instantiate optimizer ===
         optimizer_cls = OPTIMIZER_REGISTRY[config.optimizer.name]
         optimizer = optimizer_cls(**config.optimizer.params)
