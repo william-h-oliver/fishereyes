@@ -1,6 +1,4 @@
 # Third-party imports
-import jax
-import jax.numpy as jnp
 from jax import jit, value_and_grad
 import optax
 

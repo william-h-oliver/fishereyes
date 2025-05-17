@@ -132,8 +132,7 @@ class FisherEyes:
 
             epoch_loss = 0.0
             for i in range(steps_per_epoch):
-                start = i * self.batch_size
-                end = start + self.batch_size
+                start, end = i * self.batch_size, start + self.batch_size
                 y0_batch = y0_shuffled[start:end]
                 sigma0_batch = sigma0_shuffled[start:end]
 
