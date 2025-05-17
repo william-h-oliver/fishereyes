@@ -48,8 +48,6 @@ class FisherEyes:
 
         # === Instantiate model ===
         model_cls = MODEL_REGISTRY[config.model.name]
-        model = model_cls(**config.model.params)
-
         if hasattr(model_cls, "from_config"):
             data_dim = config.training.get("data_dim", 2)
             model = model_cls.from_config(dict(config.model.params), data_dim=data_dim)
@@ -125,6 +123,10 @@ class FisherEyes:
 
         # Retrieve initial state
         params = self.model.parameters()
+        if params is None:
+            key, subkey = jax.random.split(key)
+            params = self.model.init_parameters(y0.shape[1], subkey)
+            self.model.set_parameters(params)
         opt_state = self.opt_state
 
         # === Training loop ===
@@ -138,7 +140,8 @@ class FisherEyes:
 
             epoch_loss = 0.0
             for i in range(steps_per_epoch):
-                start, end = i * self.batch_size, start + self.batch_size
+                start = i * self.batch_size
+                end = start + self.batch_size
                 y0_batch = y0_shuffled[start:end]
                 sigma0_batch = sigma0_shuffled[start:end]
 

@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from typing import List
+from typing import List, Optional, Dict
 
 from fishereyes.models.basemodel import ConfigurableModel
 

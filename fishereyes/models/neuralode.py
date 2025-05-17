@@ -1,5 +1,6 @@
 import jax.numpy as jnp
 from jax.experimental.ode import odeint
+from typing import Optional
 
 from fishereyes.models.basemodel import ConfigurableModel
 
@@ -15,6 +16,9 @@ class NeuralODE(ConfigurableModel):
 
         self.ts = jnp.linspace(0.0, time_length, time_steps)
 
+    def init_parameters(self, input_dim, key):
+        return {"vector_field": self.vector_field.init_parameters(input_dim + 1, key)}
+
     def __call__(self, y0, ts=None, params=None):
         if params is None:
             params = self.parameters()
@@ -26,7 +30,7 @@ class NeuralODE(ConfigurableModel):
         t_input = jnp.full((y.shape[0], 1), t) if y.ndim > 1 else jnp.array([t])
         input_with_time = jnp.concatenate([y, t_input], axis=-1)
         return self.vector_field(input_with_time, params=params["vector_field"])
-
+    
     def parameters(self):
         return {
             "vector_field": self.vector_field.parameters()
