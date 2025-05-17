@@ -3,10 +3,9 @@ from jax import jit, value_and_grad
 import optax
 
 @jit
-def loss_and_grad(model, loss_fn, params, y0_batch, sigma0_batch):
+def loss_and_grad(model, loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_batch):
     def loss_fn_wrapped(params):
-        yT_batch = model.apply(params, y0_batch)
-        return loss_fn(y0_batch, yT_batch, sigma0_batch)
+        return loss_fn(model, params, y0_batch, eigvals0_batch, eigvecs0_batch)
 
     loss_val, grads = value_and_grad(loss_fn_wrapped)(params)
     return loss_val, grads

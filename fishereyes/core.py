@@ -129,6 +129,9 @@ class FisherEyes:
             self.model.set_parameters(params)
         opt_state = self.opt_state
 
+        # === Pre-process sigma0 ===
+        eigvals0, eigvecs0 = jnp.linalg.eigh(sigma0)
+
         # === Training loop ===
         term_width = shutil.get_terminal_size((80, 20)).columns
         pbar = trange(self.epochs, desc="Training", ncols=min(term_width, 160))
@@ -136,16 +139,18 @@ class FisherEyes:
             key, subkey = jax.random.split(key)
             perm = jax.random.permutation(subkey, num_samples)
             y0_shuffled = y0[perm]
-            sigma0_shuffled = sigma0[perm]
+            eigvals0_shuffled = eigvals0[perm]
+            eigvecs0_shuffled = eigvecs0[perm]
 
             epoch_loss = 0.0
             for i in range(steps_per_epoch):
                 start = i * self.batch_size
                 end = start + self.batch_size
                 y0_batch = y0_shuffled[start:end]
-                sigma0_batch = sigma0_shuffled[start:end]
+                eigvals0_batch = eigvals0_shuffled[start:end]
+                eigvecs0_batch = eigvecs0_shuffled[start:end]
 
-                loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0_batch, sigma0_batch)
+                loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_batch)
                 params, opt_state = update(self.optimizer, params, opt_state, grads)
                 epoch_loss += loss_val
 
