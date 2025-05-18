@@ -11,7 +11,9 @@ from fishereyes.optimizers.registry import OPTIMIZER_REGISTRY
 @pytest.fixture
 def dummy_fishereyes(dummy_data, key):
     y0, sigma0 = dummy_data
-    model = MLP(input_dim=y0.shape[1], output_dim=y0.shape[1], hidden_dims=[16])
+    model = MLP(hidden_dims=[16])
+    key, subkey = jax.random.split(key)
+    params = model.init_parameters(y0.shape[1], y0.shape[1], subkey)
     optimizer = OPTIMIZER_REGISTRY["adam"](learning_rate=1e-2)
     opt_state = optimizer.init(model.parameters())
     loss_fn = SymmetrizedScaleInvariantKL()

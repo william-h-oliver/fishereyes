@@ -17,7 +17,7 @@ class NeuralODE(ConfigurableModel):
         self.ts = jnp.linspace(0.0, time_length, time_steps)
 
     def init_parameters(self, input_dim, key):
-        return {"vector_field": self.vector_field.init_parameters(input_dim + 1, key)}
+        return {"vector_field": self.vector_field.init_parameters(input_dim + 1, input_dim, key)}
 
     def __call__(self, y0, ts=None, params=None):
         if params is None:

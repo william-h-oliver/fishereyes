@@ -13,10 +13,10 @@ class MLP(ConfigurableModel):
         # Placeholder for parameters (should be set externally or through init)
         self._params = None
 
-    def init_parameters(self, input_dim, key):
+    def init_parameters(self, input_dim, output_dim, key):
         """Initialize parameters given input dim and PRNG key."""
         layers = []
-        dims = [input_dim] + self.hidden_dims + [input_dim]
+        dims = [input_dim] + self.hidden_dims + [output_dim]
 
         for i in range(len(dims) - 1):
             k1, key = jax.random.split(key)

@@ -1,3 +1,4 @@
+import jax
 import jax.numpy as jnp
 from fishereyes.losses.ssi_kl import SymmetrizedScaleInvariantKL
 from fishereyes.models.mlp import MLP
@@ -5,8 +6,9 @@ from fishereyes.models.mlp import MLP
 
 def test_ssi_kl_loss_runs(dummy_data):
     y0, sigma0 = dummy_data
-    model = MLP(input_dim=3, output_dim=3, hidden_dims=[8])
-    params = model.parameters()
+    model = MLP(hidden_dims=[16])
+    key, subkey = jax.random.split(key)
+    params = model.init_parameters(y0.shape[1], y0.shape[1], subkey)
 
     eigvals, eigvecs = jnp.linalg.eigh(sigma0)
     loss_fn = SymmetrizedScaleInvariantKL()

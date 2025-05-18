@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-import pytest
+
 from fishereyes.models.mlp import MLP
 
 
