@@ -1,5 +1,6 @@
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
+
 from fishereyes.optimizers.registry import OPTIMIZER_REGISTRY
 
 

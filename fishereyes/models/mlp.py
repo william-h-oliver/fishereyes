@@ -12,7 +12,7 @@ class MLP(ConfigurableModel):
         output_dim: int,
         hidden_dims: List[int],
         activation: str = "tanh",
-        key: Optional[Union[jax.random.PRNGKey, int]] = None,
+        key: Optional[Union[jax.random.PRNGKey, int]] = 0,
     ):
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -22,8 +22,6 @@ class MLP(ConfigurableModel):
             self.key = key
         elif isinstance(key, int):
             self.key = jax.random.PRNGKey(key)
-        else:
-            self.key = jax.random.PRNGKey(0)
 
         self.activation_fn = getattr(jnp, activation)
 
@@ -32,8 +30,8 @@ class MLP(ConfigurableModel):
         dims = [input_dim] + self.hidden_dims + [output_dim]
 
         for i in range(len(dims) - 1):
-            k1, key = jax.random.split(key)
-            w = jax.random.normal(k1, (dims[i], dims[i + 1])) * 0.01
+            subkey, key = jax.random.split(key)
+            w = jax.random.normal(subkey, (dims[i], dims[i + 1])) * 0.01
             b = jnp.zeros((dims[i + 1],))
             layers.append({'w': w, 'b': b})
 
@@ -42,7 +40,7 @@ class MLP(ConfigurableModel):
     def __call__(
         self,
         x: jax.Array,
-        params: Optional[Any]
+        params: Optional[Any] = None
     ) -> jax.Array:
         params = self._params if params is None else params
 

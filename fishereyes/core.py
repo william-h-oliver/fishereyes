@@ -45,7 +45,7 @@ class FisherEyes:
         self.config = config
 
     @classmethod
-    def from_config(cls, data_dim, config_path=None, key=None):
+    def from_config(cls, data_dim, config_path=None, key=0):
         # === Load the full configuration ===
         config_path = config_path or DEFAULT_CONFIG_PATH
         config = OmegaConf.load(config_path)
@@ -58,8 +58,6 @@ class FisherEyes:
             model_params['key'] = key
         elif isinstance(key, int):
             model_params['key'] = jax.random.PRNGKey(key)
-        else:
-            model_params['key'] = jax.random.PRNGKey(0)
 
         # === Instantiate model ===
         model_cls = MODEL_REGISTRY[config.model.name]

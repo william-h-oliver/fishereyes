@@ -17,7 +17,7 @@ class NeuralODE(ConfigurableModel):
         time_length: float = 1.0,
         time_steps: int = 10,
         solver_params: Optional[dict] = None,
-        key: Optional[Union[jax.random.PRNGKey, int]] = None,
+        key: Optional[Union[jax.random.PRNGKey, int]] = 0,
     ):
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -30,8 +30,6 @@ class NeuralODE(ConfigurableModel):
             self.key = key
         elif isinstance(key, int):
             self.key = jax.random.PRNGKey(key)
-        else:
-            self.key = jax.random.PRNGKey(0)
 
         self.ts = jnp.linspace(0.0, time_length, time_steps)
     
@@ -70,10 +68,15 @@ class NeuralODE(ConfigurableModel):
         y0: jax.Array,
         ts: Optional[jax.Array] = None,
         params: Optional[Any] = None,
+        final_state_only: bool = True
     ) -> jax.Array:
         ts = self.ts if ts is None else ts
         params = self.parameters() if params is None else params
-        return odeint(self._wrapped_vector_field, y0, ts, params)
+        paths = odeint(self._wrapped_vector_field, y0, ts, params)
+        if final_state_only:
+            return paths[-1]
+        else:
+            return paths
 
     def _wrapped_vector_field(
         self,
@@ -90,9 +93,11 @@ class NeuralODE(ConfigurableModel):
         return self.vector_field(input_vector, params=params["vector_field"])
     
     def parameters(self) -> Any:
-        return {
+        returnDict = {
             "vector_field": self.vector_field.parameters()
         }
+        print("NeuralODE parameters: ", returnDict)
+        return returnDict
 
     def set_parameters(self, params: Any) -> None:
         self.vector_field.set_parameters(params["vector_field"])
