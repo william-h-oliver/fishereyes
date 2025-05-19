@@ -2,6 +2,7 @@
 
 # Standard library imports
 import shutil
+from pathlib import Path
 
 # Third-party library imports
 from omegaconf import OmegaConf
@@ -16,6 +17,8 @@ from tqdm import trange
 from fishereyes.models.registry import MODEL_REGISTRY
 from fishereyes.losses.registry import LOSS_REGISTRY
 from fishereyes.optimizers.registry import OPTIMIZER_REGISTRY
+
+DEFAULT_CONFIG_PATH = Path(__file__).parent / "configs" / "default_config.yaml"
 
 
 class FisherEyes:
@@ -42,17 +45,19 @@ class FisherEyes:
         self.config = config
 
     @classmethod
-    def from_config(cls, config_path):
-        # Load the full configuration
+    def from_config(cls, data_dim, config_path=None):
+        # === Load the full configuration ===
+        config_path = config_path or DEFAULT_CONFIG_PATH
         config = OmegaConf.load(config_path)
+
+        # === Update model config with input/output dimensions ===
+        model_params = dict(config.model.params)  # Make mutable copy
+        model_params["input_dim"] = data_dim
+        model_params["output_dim"] = data_dim
 
         # === Instantiate model ===
         model_cls = MODEL_REGISTRY[config.model.name]
-        if hasattr(model_cls, "from_config"):
-            data_dim = config.training.get("data_dim", 2)
-            model = model_cls.from_config(dict(config.model.params), data_dim=data_dim)
-        else:
-            model = model_cls(**config.model.params)
+        model = model_cls.from_config(model_params)
 
         # === Instantiate optimizer ===
         optimizer_cls = OPTIMIZER_REGISTRY[config.optimizer.name]
@@ -60,7 +65,8 @@ class FisherEyes:
         opt_state = optimizer.init(model.parameters())
 
         # === Instantiate loss function ===
-        loss_fn = LOSS_REGISTRY[config.loss.name](**config.loss.params)
+        loss_fn_cls = LOSS_REGISTRY[config.loss.name]
+        loss_fn = loss_fn_cls(**config.loss.params)
 
         # === Unpack training config ===
         training_cfg = config.training
@@ -113,7 +119,7 @@ class FisherEyes:
         - sigma0: Covariance matrices of shape [N, D, D]
         - key: Optional PRNGKey for reproducibility
         """
-        if key is None: key = jax.random.PRNGKey(42)
+        if key is None: key = jax.random.PRNGKey(0)
 
         # Get number of samples
         num_samples = y0.shape[0]
@@ -125,7 +131,7 @@ class FisherEyes:
         params = self.model.parameters()
         if params is None:
             key, subkey = jax.random.split(key)
-            params = self.model.init_parameters(y0.shape[1], subkey)
+            params = self.model.init_parameters(y0.shape[1], y0.shape[1], subkey)
             self.model.set_parameters(params)
         opt_state = self.opt_state
 

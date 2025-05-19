@@ -6,14 +6,13 @@ model:
       params:
         hidden_dims: [64, 64]
         activation: tanh
-    ode_solver:
-      name: odeint
-      params:
-        atol: 1e-6
-        rtol: 1e-6
+    time_dependence: True
     time_length: 1.0
     time_steps: 10
-
+    solver_params:
+      atol: 1e-6
+      rtol: 1e-6
+    
 optimizer:
   name: adam
   params:

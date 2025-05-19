@@ -10,25 +10,23 @@ class ConfigurableModel(ABC):
     @classmethod
     def from_config(cls, config: DictConfig, **extra_kwargs):
         """
-        Instantiate the model from a nested OmegaConf config dictionary.
-        Supports recursive instantiation of submodels if specified.
+        Default implementation of `from_config` for models where:
+        - Each submodel is specified by a {"name": ..., "params": ...} dict.
+        - There is no conditional logic or parameter adaptation needed.
+        Override this method in subclasses if the model requires interdependent parameter logic.
         """
         from fishereyes.models.registry import MODEL_REGISTRY
-        config = dict(config)  # Ensure normal dict
+        config = dict(config)  # Convert to standard dict
 
-        submodels = {}
+        constructor_dict = {}
         for key, value in config.items():
             if isinstance(value, dict) and "name" in value and "params" in value:
                 submodel_cls = MODEL_REGISTRY[value["name"]]
-                submodels[key] = submodel_cls.from_config(value["params"], **extra_kwargs)
+                constructor_dict[key] = submodel_cls.from_config(value["params"], **extra_kwargs)
             else:
-                submodels[key] = value
+                constructor_dict[key] = value
 
-        return cls(**submodels, **extra_kwargs)
-    
-    @abstractmethod
-    def init_parameters(self, input_dim: int, key):
-        pass
+        return cls(**constructor_dict, **extra_kwargs)
 
     @abstractmethod
     def __call__(self, *args, **kwargs):

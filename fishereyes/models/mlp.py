@@ -1,20 +1,33 @@
 import jax
 import jax.numpy as jnp
-from typing import List, Optional, Dict
+from typing import List, Optional, Union, Any
 
 from fishereyes.models.basemodel import ConfigurableModel
 
 
 class MLP(ConfigurableModel):
-    def __init__(self, hidden_dims: List[int], activation: str = "tanh"):
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+        hidden_dims: List[int],
+        activation: str = "tanh",
+        key: Optional[Union[jax.random.PRNGKey, int]] = None,
+    ):
+        self.input_dim = input_dim
+        self.output_dim = output_dim
         self.hidden_dims = hidden_dims
+        self.activation = activation
+        if isinstance(key, jax.Array):
+            self.key = key
+        elif isinstance(key, int):
+            self.key = jax.random.PRNGKey(key)
+        else:
+            self.key = jax.random.PRNGKey(0)
+
         self.activation_fn = getattr(jnp, activation)
 
-        # Placeholder for parameters (should be set externally or through init)
-        self._params = None
-
-    def init_parameters(self, input_dim, output_dim, key):
-        """Initialize parameters given input dim and PRNG key."""
+        # Initialize parameters given dims and PRNG key
         layers = []
         dims = [input_dim] + self.hidden_dims + [output_dim]
 
@@ -25,11 +38,13 @@ class MLP(ConfigurableModel):
             layers.append({'w': w, 'b': b})
 
         self._params = {'layers': layers}
-        return self._params
 
-    def __call__(self, x, params=None):
-        if params is None:
-            params = self._params
+    def __call__(
+        self,
+        x: jax.Array,
+        params: Optional[Any]
+    ) -> jax.Array:
+        params = self._params if params is None else params
 
         for i, layer in enumerate(params['layers']):
             x = jnp.dot(x, layer['w']) + layer['b']
@@ -37,9 +52,9 @@ class MLP(ConfigurableModel):
                 x = self.activation_fn(x)
         return x
 
-    def parameters(self):
+    def parameters(self) -> Any:
         return self._params
 
-    def set_parameters(self, params):
+    def set_parameters(self, params: Any) -> None:
         self._params = params
 

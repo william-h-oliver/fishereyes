@@ -1,6 +1,5 @@
 import jax
 import jax.numpy as jnp
-from jax import jacrev
 
 
 class SymmetrizedScaleInvariantKL:
@@ -25,7 +24,7 @@ class SymmetrizedScaleInvariantKL:
 
         # Compute Jacobians of model output w.r.t. inputs for each sample
         def single_jac(y):
-            return jacrev(model, argnums=0)(y[None, :], params)[0]  # shape (D, D)
+            return jax.jacrev(model, argnums=0)(y[None, :], params)[0]  # shape (D, D)
 
         J = jax.vmap(single_jac)(y0)  # shape (N, D, D)
 
