@@ -7,7 +7,7 @@ from fishereyes.models.mlp import MLP
 def test_ssi_kl_loss_runs(dummy_data, key):
     y0, sigma0 = dummy_data
     model = MLP(input_dim=y0.shape[-1],
-                output=y0.shape[-1],
+                output_dim=y0.shape[-1],
                 hidden_dims=[16],
                 key=key)
     params = model.parameters()
