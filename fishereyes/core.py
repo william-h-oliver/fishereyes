@@ -8,7 +8,7 @@ from pathlib import Path
 from omegaconf import OmegaConf
 import jax
 import jax.numpy as jnp
-from typing import Optional
+from typing import Optional, Union
 from jax.random import PRNGKey
 from fishereyes.utils.train_utils import loss_and_grad, update
 from tqdm import trange
@@ -45,7 +45,7 @@ class FisherEyes:
         self.config = config
 
     @classmethod
-    def from_config(cls, data_dim, config_path=None):
+    def from_config(cls, data_dim, config_path=None, key=None):
         # === Load the full configuration ===
         config_path = config_path or DEFAULT_CONFIG_PATH
         config = OmegaConf.load(config_path)
@@ -54,6 +54,12 @@ class FisherEyes:
         model_params = dict(config.model.params)  # Make mutable copy
         model_params["input_dim"] = data_dim
         model_params["output_dim"] = data_dim
+        if isinstance(key, jax.Array):
+            model_params['key'] = key
+        elif isinstance(key, int):
+            model_params['key'] = jax.random.PRNGKey(key)
+        else:
+            model_params['key'] = jax.random.PRNGKey(0)
 
         # === Instantiate model ===
         model_cls = MODEL_REGISTRY[config.model.name]
@@ -107,9 +113,9 @@ class FisherEyes:
 
     def fit(
         self,
-        y0: jnp.ndarray,         # shape [N, D]
-        sigma0: jnp.ndarray,     # shape [N, D, D]
-        key: Optional[PRNGKey] = None,
+        y0: jax.Array,         # shape [N, D]
+        sigma0: jax.Array,     # shape [N, D, D]
+        key: Optional[Union[jax.random.PRNGKey, int]] = None,
     ) -> None:
         """
         Fit the transformation model to data.
@@ -119,7 +125,12 @@ class FisherEyes:
         - sigma0: Covariance matrices of shape [N, D, D]
         - key: Optional PRNGKey for reproducibility
         """
-        if key is None: key = jax.random.PRNGKey(0)
+        if isinstance(key, jax.Array):
+            self.key = key
+        elif isinstance(key, int):
+            self.key = jax.random.PRNGKey(key)
+        else:
+            self.key = jax.random.PRNGKey(0)
 
         # Get number of samples
         num_samples = y0.shape[0]

@@ -1,12 +1,11 @@
 import pytest
 import jax
 import jax.numpy as jnp
-from jax.random import PRNGKey
 
 
 @pytest.fixture(scope="module")
 def key():
-    return PRNGKey(0)
+    return jax.random.PRNGKey(0)
 
 
 @pytest.fixture

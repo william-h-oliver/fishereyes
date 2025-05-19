@@ -3,21 +3,12 @@ import jax.numpy as jnp
 import pytest
 
 from fishereyes.core import FisherEyes
-from fishereyes.models.mlp import MLP
-from fishereyes.losses.ssi_kl import SymmetrizedScaleInvariantKL
-from fishereyes.optimizers.registry import OPTIMIZER_REGISTRY
 
 
 @pytest.fixture
 def dummy_fishereyes(dummy_data, key):
-    y0, sigma0 = dummy_data
-    model = MLP(hidden_dims=[16])
-    key, subkey = jax.random.split(key)
-    params = model.init_parameters(y0.shape[1], y0.shape[1], subkey)
-    optimizer = OPTIMIZER_REGISTRY["adam"](learning_rate=1e-2)
-    opt_state = optimizer.init(model.parameters())
-    loss_fn = SymmetrizedScaleInvariantKL()
-    return FisherEyes(model, optimizer, opt_state, loss_fn, epochs=1, batch_size=5)
+    y0, _ = dummy_data
+    return FisherEyes.from_config(y0.shape[-1], config_path=None, key=key)
 
 
 def test_fit_runs(dummy_fishereyes, dummy_data, key):
