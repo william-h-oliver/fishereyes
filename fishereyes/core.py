@@ -8,7 +8,7 @@ from pathlib import Path
 from omegaconf import OmegaConf
 import jax
 import jax.numpy as jnp
-from typing import Optional, Union
+from typing import Optional, Union, Dict, Any
 from jax.random import PRNGKey
 from fishereyes.utils.train_utils import loss_and_grad, update
 from tqdm import trange
@@ -24,14 +24,14 @@ DEFAULT_CONFIG_PATH = Path(__file__).parent / "configs" / "default_config.yaml"
 class FisherEyes:
     def __init__(
         self,
-        model,
-        optimizer,
-        opt_state,
-        loss_fn,
-        epochs,
-        batch_size,
-        config={},
-    ):
+        model: Any,
+        optimizer: Any,
+        opt_state: Any,
+        loss_fn: Any,
+        epochs: int,
+        batch_size: int,
+        config: Dict[str, Any] = {},
+    ) -> None:
         # Core components
         self.model = model
         self.optimizer = optimizer
@@ -45,13 +45,19 @@ class FisherEyes:
         self.config = config
 
     @classmethod
-    def from_config(cls, data_dim, config_path=None, key=0):
+    def from_config(
+        cls,
+        data_dim: int,
+        config_path: Optional[Union[str, Path]] = None,
+        key: Optional[Union[PRNGKey, int]] = 0,
+    ) -> "FisherEyes":
         # === Load the full configuration ===
         config_path = config_path or DEFAULT_CONFIG_PATH
         config = OmegaConf.load(config_path)
+        config = OmegaConf.to_container(config, resolve=True)
 
         # === Update model config with input/output dimensions ===
-        model_params = dict(config.model.params)  # Make mutable copy
+        model_params = dict(config["model"]["params"])  # Make mutable copy
         model_params["input_dim"] = data_dim
         model_params["output_dim"] = data_dim
         if isinstance(key, jax.Array):
@@ -60,22 +66,22 @@ class FisherEyes:
             model_params['key'] = jax.random.PRNGKey(key)
 
         # === Instantiate model ===
-        model_cls = MODEL_REGISTRY[config.model.name]
+        model_cls = MODEL_REGISTRY[config["model"]["name"]]
         model = model_cls.from_config(model_params)
 
         # === Instantiate optimizer ===
-        optimizer_cls = OPTIMIZER_REGISTRY[config.optimizer.name]
-        optimizer = optimizer_cls(**config.optimizer.params)
+        optimizer_cls = OPTIMIZER_REGISTRY[config["optimizer"]["name"]]
+        optimizer = optimizer_cls(**config["optimizer"]["params"])
         opt_state = optimizer.init(model.parameters())
 
         # === Instantiate loss function ===
-        loss_fn_cls = LOSS_REGISTRY[config.loss.name]
-        loss_fn = loss_fn_cls(**config.loss.params)
+        loss_fn_cls = LOSS_REGISTRY[config["loss"]["name"]]
+        loss_fn = loss_fn_cls(**config["loss"]["params"])
 
         # === Unpack training config ===
-        training_cfg = config.training
-        epochs = training_cfg.epochs
-        batch_size = training_cfg.batch_size
+        training_cfg = config["training"]
+        epochs = training_cfg["epochs"]
+        batch_size = training_cfg["batch_size"]
 
         # === Return initialized instance ===
         return cls(
@@ -88,7 +94,7 @@ class FisherEyes:
             config=config,
         )
 
-    def as_config(self):
+    def as_config(self) -> Dict[str, Any]:
         """Return a dictionary representation of the current configuration."""
         return {
             "model": {

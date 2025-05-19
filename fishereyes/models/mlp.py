@@ -21,7 +21,8 @@ class MLP(ConfigurableModel):
         if isinstance(key, jax.Array):
             self.key = key
         elif isinstance(key, int):
-            self.key = jax.random.PRNGKey(key)
+            key = jax.random.PRNGKey(key)
+            self.key = key
 
         self.activation_fn = getattr(jnp, activation)
 

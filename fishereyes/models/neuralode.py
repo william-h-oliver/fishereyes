@@ -2,7 +2,6 @@ import jax
 import jax.numpy as jnp
 from jax.experimental.ode import odeint
 from typing import Optional, Union, Any
-from omegaconf import DictConfig
 
 from fishereyes.models.basemodel import ConfigurableModel
 
@@ -34,7 +33,7 @@ class NeuralODE(ConfigurableModel):
         self.ts = jnp.linspace(0.0, time_length, time_steps)
     
     @classmethod
-    def from_config(cls, config: DictConfig, **extra_kwargs):
+    def from_config(cls, config: dict, **extra_kwargs):
         """
         Custom from_config for NeuralODE to handle dynamic input_dim logic and submodel instantiation.
         """
@@ -51,10 +50,14 @@ class NeuralODE(ConfigurableModel):
 
                 input_dim = config["input_dim"] + (1 if time_dependence else 0)
                 output_dim = config["output_dim"]
+                vector_field_key = config.get("key", 0)
+                if isinstance(vector_field_key, int):
+                    vector_field_key = jax.random.PRNGKey(vector_field_key)
+                vector_field_key, _ = jax.random.split(vector_field_key)
 
                 vector_field_cls = MODEL_REGISTRY[value["name"]]
                 vector_field_config = dict(value["params"])
-                vector_field_config.update(dict(input_dim=input_dim, output_dim=output_dim))
+                vector_field_config.update(dict(input_dim=input_dim, output_dim=output_dim, key=vector_field_key))
 
                 constructor_dict[key] = vector_field_cls.from_config(vector_field_config, **extra_kwargs)
             else:
@@ -72,6 +75,7 @@ class NeuralODE(ConfigurableModel):
     ) -> jax.Array:
         ts = self.ts if ts is None else ts
         params = self.parameters() if params is None else params
+        print(f"y0 shape: {y0.shape}")
         paths = odeint(self._wrapped_vector_field, y0, ts, params)
         if final_state_only:
             return paths[-1]
@@ -86,18 +90,16 @@ class NeuralODE(ConfigurableModel):
     ) -> jax.Array:
         if self.time_dependence:
             # Add time as an additional input to the vector field
-            time_input = jnp.full((y.shape[0], 1), t)
-            input_vector = jnp.concatenate((y, time_input), axis=1)
+            time_input = jnp.full((y.shape[0], 1), t) if y.ndim > 1 else jnp.array([t])
+            input_vector = jnp.concatenate((y, time_input), axis=-1)
         else:
             input_vector = y
         return self.vector_field(input_vector, params=params["vector_field"])
     
     def parameters(self) -> Any:
-        returnDict = {
+        return {
             "vector_field": self.vector_field.parameters()
         }
-        print("NeuralODE parameters: ", returnDict)
-        return returnDict
 
     def set_parameters(self, params: Any) -> None:
         self.vector_field.set_parameters(params["vector_field"])

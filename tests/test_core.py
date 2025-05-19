@@ -8,7 +8,10 @@ from fishereyes.core import FisherEyes
 @pytest.fixture
 def dummy_fishereyes(dummy_data, key):
     y0, _ = dummy_data
-    return FisherEyes.from_config(y0.shape[-1], config_path=None, key=key)
+    config_path = "tests/configs/test_config.yaml"
+    fishi = FisherEyes.from_config(y0.shape[-1], config_path=config_path, key=key)
+    return fishi
+
 
 
 def test_fit_runs(dummy_fishereyes, dummy_data, key):

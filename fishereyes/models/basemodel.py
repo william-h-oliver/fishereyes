@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from omegaconf import DictConfig
 
 
 class ConfigurableModel(ABC):
@@ -8,7 +7,7 @@ class ConfigurableModel(ABC):
     """
 
     @classmethod
-    def from_config(cls, config: DictConfig, **extra_kwargs):
+    def from_config(cls, config: dict, **extra_kwargs):
         """
         Default implementation of `from_config` for models where:
         - Each submodel is specified by a {"name": ..., "params": ...} dict.

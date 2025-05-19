@@ -1,0 +1,27 @@
+model:
+  name: neural_ode
+  params:
+    vector_field:
+      name: mlp
+      params:
+        hidden_dims: [4]
+        activation: tanh
+    time_dependence: True
+    time_length: 1.0
+    time_steps: 2
+    solver_params:
+      atol: 1e-4
+      rtol: 1e-4
+    
+optimizer:
+  name: adam
+  params:
+    lr: 1e-3
+
+loss:
+  name: ssiKLdiv
+  params: {}
+
+training:
+  epochs: 2
+  batch_size: 8
