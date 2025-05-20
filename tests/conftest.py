@@ -8,8 +8,8 @@ import jax.numpy as jnp
 
 
 @pytest.fixture(scope="module")
-def key() -> jax.random.PRNGKey:
-    return jax.random.PRNGKey(0)
+def key() -> jax.random.key:
+    return jax.random.key(0)
 
 
 @pytest.fixture

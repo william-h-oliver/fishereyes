@@ -20,7 +20,7 @@ class NeuralODE(ConfigurableModel):
         time_length: float = 1.0,
         time_steps: int = 10,
         solver_params: Optional[dict] = None,
-        key: Optional[Union[jax.random.PRNGKey, int]] = None,
+        key: Optional[Union[jax.random.key, int]] = None,
     ) -> None:
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -32,9 +32,9 @@ class NeuralODE(ConfigurableModel):
         if isinstance(key, jax.Array):
             self.key = key
         elif isinstance(key, int):
-            self.key = jax.random.PRNGKey(key)
+            self.key = jax.random.key(key)
         else:
-            self.key = jax.random.PRNGKey(0)
+            self.key = jax.random.key(0)
 
         self.ts = jnp.linspace(0.0, time_length, time_steps)
     
@@ -62,7 +62,7 @@ class NeuralODE(ConfigurableModel):
                 output_dim = config["output_dim"]
                 vector_field_key = config.get("key", 0)
                 if isinstance(vector_field_key, int):
-                    vector_field_key = jax.random.PRNGKey(vector_field_key)
+                    vector_field_key = jax.random.key(vector_field_key)
                 vector_field_key, _ = jax.random.split(vector_field_key)
 
                 vector_field_cls = MODEL_REGISTRY[value["name"]]

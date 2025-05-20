@@ -16,7 +16,7 @@ class MLP(ConfigurableModel):
         output_dim: int,
         hidden_dims: List[int],
         activation: str = "tanh",
-        key: Optional[Union[jax.random.PRNGKey, int]] = None,
+        key: Optional[Union[jax.random.key, int]] = None,
     ) -> None:
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -25,10 +25,10 @@ class MLP(ConfigurableModel):
         if isinstance(key, jax.Array):
             self.key = key
         elif isinstance(key, int):
-            key = jax.random.PRNGKey(key)
+            key = jax.random.key(key)
             self.key = key
         else:
-            key = jax.random.PRNGKey(0)
+            key = jax.random.key(0)
             self.key = key
 
         self.activation_fn = getattr(jnp, activation)

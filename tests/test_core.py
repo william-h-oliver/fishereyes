@@ -12,7 +12,7 @@ from fishereyes.core import FisherEyes
 @pytest.fixture
 def dummy_fishereyes(
     dummy_data: Tuple[jax.Array, jax.Array],
-    key: jax.random.PRNGKey,
+    key: jax.random.key,
 ) -> FisherEyes:
     y0, _ = dummy_data
     config_path = "tests/configs/test_config.yaml"
@@ -23,7 +23,7 @@ def dummy_fishereyes(
 def test_fit_runs(
     dummy_fishereyes: FisherEyes,
     dummy_data: Tuple[jax.Array, jax.Array],
-    key: jax.random.PRNGKey,
+    key: jax.random.key,
 ) -> None:
     y0, sigma0 = dummy_data
     dummy_fishereyes.fit(y0, sigma0, key)

@@ -12,7 +12,7 @@ from fishereyes.models.mlp import MLP
 
 def test_ssi_kl_loss_runs(
     dummy_data: Tuple[jax.Array, jax.Array],
-    key: jax.random.PRNGKey,
+    key: jax.random.key,
 ) -> None:
     y0, sigma0 = dummy_data
     model = MLP(input_dim=y0.shape[-1],
