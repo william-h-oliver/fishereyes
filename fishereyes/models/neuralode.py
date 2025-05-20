@@ -8,6 +8,7 @@ from jax.experimental.ode import odeint
 
 # Local imports
 from fishereyes.models.basemodel import ConfigurableModel
+from fishereyes.utils.key_utils import create_key
 
 
 class NeuralODE(ConfigurableModel):
@@ -29,12 +30,7 @@ class NeuralODE(ConfigurableModel):
         self.time_length = time_length
         self.time_steps = time_steps
         self.solver_params = solver_params or {}
-        if isinstance(key, jax.Array):
-            self.key = key
-        elif isinstance(key, int):
-            self.key = jax.random.key(key)
-        else:
-            self.key = jax.random.key(0)
+        self.key = create_key(key)
 
         self.ts = jnp.linspace(0.0, time_length, time_steps)
     

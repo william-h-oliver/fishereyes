@@ -7,6 +7,7 @@ import jax.numpy as jnp
 
 # Local imports
 from fishereyes.models.basemodel import ConfigurableModel
+from fishereyes.utils.key_utils import create_key
 
 
 class MLP(ConfigurableModel):
@@ -22,14 +23,7 @@ class MLP(ConfigurableModel):
         self.output_dim = output_dim
         self.hidden_dims = hidden_dims
         self.activation = activation
-        if isinstance(key, jax.Array):
-            self.key = key
-        elif isinstance(key, int):
-            key = jax.random.key(key)
-            self.key = key
-        else:
-            key = jax.random.key(0)
-            self.key = key
+        self.key = create_key(key)
 
         self.activation_fn = getattr(jnp, activation)
 
