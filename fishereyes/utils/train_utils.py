@@ -1,5 +1,5 @@
 # Standard imports
-from typing import Optional, Union, List, Tuple, Dict, Any
+from typing import List, Tuple
 
 # Third-party imports
 import jax
@@ -20,8 +20,12 @@ def shuffle_and_split_batches(
     key, subkey = jax.random.split(key)
     perm = jax.random.permutation(subkey, y0.shape[0])
 
+    # Adjust number of batches to include all data
+    last_batch_adjust = y0.shape[0] % batch_size if batch_size <= y0.shape[0] else 0
+    if last_batch_adjust != 0: last_batch_adjust = batch_size
+
     # Split into batches
-    batches = [perm[i:i + batch_size] for i in range(0, y0.shape[0], batch_size)]
+    batches = [perm[i:i + batch_size] for i in range(0, y0.shape[0] + last_batch_adjust, batch_size)]
     y0_batches = [y0[batch] for batch in batches]
     eigvals0_batches = [eigvals0[batch] for batch in batches]
     eigvecs0_batches = [eigvecs0[batch] for batch in batches]

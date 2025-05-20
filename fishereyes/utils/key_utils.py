@@ -9,7 +9,7 @@ def create_key(seed: Optional[Union[jax.random.key, int]]) -> jax.random.key:
     """
     Create a JAX random key from an integer seed or a JAX key.
     """
-    if isinstance(seed, jax.random.key):
+    if isinstance(seed, jax.Array):
         return seed
     elif isinstance(seed, int):
         return jax.random.key(seed)
