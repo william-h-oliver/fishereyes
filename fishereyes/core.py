@@ -15,12 +15,12 @@ from typing import Optional, Union, Dict, Any
 from omegaconf import OmegaConf
 import jax
 import jax.numpy as jnp
+import optax
 from tqdm import trange
 
 # Local library imports
 from fishereyes.models.registry import MODEL_REGISTRY
 from fishereyes.losses.registry import LOSS_REGISTRY
-from fishereyes.optimizers.registry import OPTIMIZER_REGISTRY
 from fishereyes.utils.train_utils import (
     shuffle_and_split_batches,
     loss_and_grad,
@@ -38,6 +38,33 @@ DEFAULT_CONFIG_PATH = Path(__file__).parent / "configs" / "default_config.yaml"
 
 
 class FisherEyes:
+    """
+    FisherEyes: A class for learning diffeomorphic transformations that normalize
+    heteroskedastic uncertainty.
+
+    Parameters
+    ----------
+    model: Any
+        The model to be trained.
+    optimizer: Any
+        The optimizer to be used for training.
+    opt_state: Any
+        The initial state of the optimizer.
+    loss_fn: Any
+        The loss function to be used for training.
+    epochs: int
+        The number of epochs to train the model.
+    batch_size: int
+        The size of the batches to be used during training.
+    config: Dict[str, Any], optional
+        A dictionary containing the configuration for the model, optimizer, and loss function.
+        If None, the default configuration is used.
+
+    Attributes
+    ----------
+    loss_history: List[float]
+        A list containing the loss values for each epoch during training.
+    """
     def __init__(
         self,
         model: Any,
@@ -55,10 +82,9 @@ class FisherEyes:
         self.loss_fn = loss_fn
         self.epochs = epochs
         self.batch_size = batch_size
-        self.loss_history = []
-
-        # Save full config for reproducibility/logging
         self.config = config or {}
+        
+        self.loss_history = []
 
     @classmethod
     def from_config(
@@ -99,7 +125,7 @@ class FisherEyes:
         model = model_cls.from_config(model_params)
 
         # === Instantiate optimizer ===
-        optimizer_cls = OPTIMIZER_REGISTRY[config["optimizer"]["name"]]
+        optimizer_cls = getattr(optax, config["optimizer"]["name"])
         optimizer = optimizer_cls(**config["optimizer"]["params"])
         opt_state = optimizer.init(model.parameters())
 
@@ -180,10 +206,10 @@ class FisherEyes:
             for y0_batch, eigvals0_batch, eigvecs0_batch in zip(y0_batches, eigvals0_batches, eigvecs0_batches):
                 # Compute loss and gradients
                 loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_batch)
+                epoch_loss += loss_val * len(y0_batch)  # Accumulate loss over batches
                 
                 # Update parameters and optimizer state
                 params, opt_state = update(self.optimizer, params, opt_state, grads)
-                epoch_loss += loss_val * len(y0_batch)
             
             # Average loss over the epoch
             epoch_loss /= y0.shape[0]  # Normalize by number of samples

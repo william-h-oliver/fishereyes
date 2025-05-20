@@ -52,9 +52,8 @@ def validate_key(key: Optional[Union[jax.random.key, int]]) -> None:
     Parameters:
     - key: Optional jax.random.key or integer seed for reproducibility.
     """
-    if key is not None:
-        if not isinstance(key, (jax.Array, int)):
-            raise TypeError(f"Expected key to be a jax.random.key or an integer, got {type(key)}.")
+    if key is not None and not isinstance(key, (jax.Array, int)):
+        raise TypeError(f"Expected key to be a jax.random.key or an integer, got {type(key)}.")
         
 def validate_input_data(
     y0: jax.Array,
