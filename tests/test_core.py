@@ -16,7 +16,7 @@ def dummy_fishereyes(
     key: jax.random.key,
 ) -> FisherEyes:
     y0, _ = dummy_data
-    config_path = "tests/configs/test_config.yaml"
+    config_path = "configs/test_config.yaml"
     fishi = FisherEyes.from_config(y0.shape[-1], config_path=config_path, key=key)
     return fishi
 
@@ -50,7 +50,7 @@ def test_from_config_invalid(
     key: jax.random.key,
 ) -> None:
     y0, _ = dummy_data
-    invalid_config_path = "tests/configs/invalid_config.yaml"
+    invalid_config_path = "configs/invalid_config.yaml"
     with pytest.raises(KeyError):
         FisherEyes.from_config(y0.shape[-1], config_path=invalid_config_path, key=key)
 
