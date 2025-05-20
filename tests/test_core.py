@@ -13,11 +13,11 @@ from fishereyes.core import FisherEyes
 @pytest.fixture
 def dummy_fishereyes(
     dummy_data: Tuple[jax.Array, jax.Array],
+    dummy_config: str,
     key: jax.random.key,
 ) -> FisherEyes:
     y0, _ = dummy_data
-    config_path = "configs/test_config.yaml"
-    fishi = FisherEyes.from_config(y0.shape[-1], config_path=config_path, key=key)
+    fishi = FisherEyes.from_config(y0.shape[-1], config_path=dummy_config, key=key)
     return fishi
 
 
@@ -47,12 +47,12 @@ def test_fit_runs(
 
 def test_from_config_invalid(
     dummy_data: Tuple[jax.Array, jax.Array],
+    dummy_invalid_config: str,
     key: jax.random.key,
 ) -> None:
     y0, _ = dummy_data
-    invalid_config_path = "configs/invalid_config.yaml"
     with pytest.raises(KeyError):
-        FisherEyes.from_config(y0.shape[-1], config_path=invalid_config_path, key=key)
+        FisherEyes.from_config(y0.shape[-1], config_path=dummy_invalid_config, key=key)
 
 
 def test_fit_invalid_inputs(
