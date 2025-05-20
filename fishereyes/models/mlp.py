@@ -38,15 +38,6 @@ class MLP(ConfigurableModel):
             layers.append({'w': w, 'b': b})
 
         self._params = {'layers': layers}
-    
-    def as_config(self) -> Dict[str, Any]:
-        return {
-            "name": "MLP",
-            "params": {
-                "hidden_dims": self.hidden_dims,
-                "activation": self.activation,
-            }
-        }
 
     def __call__(
         self,

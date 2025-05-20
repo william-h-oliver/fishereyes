@@ -149,21 +149,6 @@ class FisherEyes:
             config=config,
         )
 
-    def as_config(self) -> Dict[str, Any]:
-        """Return a dictionary representation of the current configuration."""
-        return {
-            "model": self.model.as_config(),
-            "optimizer": {
-                "name": self.optimizer.name,
-                "params": self.optimizer.params,
-            },
-            "loss": self.loss_fn.as_config(),
-            "training": {
-                "epochs": self.epochs,
-                "batch_size": self.batch_size,
-            },
-        }
-
     def fit(
         self,
         y0: jax.Array,         # shape [N, D]

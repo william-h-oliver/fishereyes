@@ -71,22 +71,6 @@ class NeuralODE(ConfigurableModel):
 
         return cls(**constructor_dict, **extra_kwargs)
 
-    def as_config(self) -> Dict[str, Any]:
-        """
-        Convert the model instance to a configuration dictionary.
-        This should include all parameters needed to recreate the model.
-        """
-        return {
-            "name": "NeuralODE",
-            "params": {
-                "vector_field": self.vector_field.as_config(),
-                "time_dependence": self.time_dependence,
-                "time_length": self.time_length,
-                "time_steps": self.time_steps,
-                "solver_params": self.solver_params,
-            }
-        }
-
     def __call__(
         self,
         y0: jax.Array,

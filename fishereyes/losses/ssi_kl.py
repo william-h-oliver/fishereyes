@@ -1,5 +1,5 @@
 # Standard imports
-from typing import Dict, Any
+from typing import Any
 
 # Third-party imports
 import jax
@@ -10,16 +10,6 @@ class SymmetrizedScaleInvariantKL:
     def __init__(self):
         # No hyperparameters for now, but leave __init__ for extensibility
         pass
-
-    def as_config(self) -> Dict[str, Any]:
-        """
-        Returns a dictionary representation of the loss function configuration.
-        This is useful for saving/loading configurations.
-        """
-        return {
-            "name": "SymmetrizedScaleInvariantKL",
-            "params": {}
-        }
 
     def __call__(
         self,

@@ -1,4 +1,5 @@
 # Third-party imports
+import pytest
 import jax
 import jax.numpy as jnp
 

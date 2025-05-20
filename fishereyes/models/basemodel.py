@@ -31,15 +31,7 @@ class ConfigurableModel(ABC):
                 constructor_dict[key] = value
 
         return cls(**constructor_dict, **extra_kwargs)
-
-    @abstractmethod
-    def as_config(self):
-        """
-        Convert the model instance to a configuration dictionary.
-        This should include all parameters needed to recreate the model.
-        """
-        pass
-
+    
     @abstractmethod
     def __call__(self, *args, **kwargs):
         pass
