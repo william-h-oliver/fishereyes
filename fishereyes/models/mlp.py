@@ -1,7 +1,11 @@
+# Standard imports
+from typing import List, Optional, Union, Dict, Any
+
+# Third-party imports
 import jax
 import jax.numpy as jnp
-from typing import List, Optional, Union, Any
 
+# Local imports
 from fishereyes.models.basemodel import ConfigurableModel
 
 
@@ -12,8 +16,8 @@ class MLP(ConfigurableModel):
         output_dim: int,
         hidden_dims: List[int],
         activation: str = "tanh",
-        key: Optional[Union[jax.random.PRNGKey, int]] = 0,
-    ):
+        key: Optional[Union[jax.random.PRNGKey, int]] = None,
+    ) -> None:
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.hidden_dims = hidden_dims
@@ -22,6 +26,9 @@ class MLP(ConfigurableModel):
             self.key = key
         elif isinstance(key, int):
             key = jax.random.PRNGKey(key)
+            self.key = key
+        else:
+            key = jax.random.PRNGKey(0)
             self.key = key
 
         self.activation_fn = getattr(jnp, activation)
@@ -37,11 +44,20 @@ class MLP(ConfigurableModel):
             layers.append({'w': w, 'b': b})
 
         self._params = {'layers': layers}
+    
+    def as_config(self) -> Dict[str, Any]:
+        return {
+            "name": "MLP",
+            "params": {
+                "hidden_dims": self.hidden_dims,
+                "activation": self.activation,
+            }
+        }
 
     def __call__(
         self,
         x: jax.Array,
-        params: Optional[Any] = None
+        params: Optional[Dict[str, Any]] = None
     ) -> jax.Array:
         params = self._params if params is None else params
 
@@ -51,9 +67,9 @@ class MLP(ConfigurableModel):
                 x = self.activation_fn(x)
         return x
 
-    def parameters(self) -> Any:
+    def parameters(self) -> Dict[str, Any]:
         return self._params
 
-    def set_parameters(self, params: Any) -> None:
+    def set_parameters(self, params: Dict[str, Any]) -> None:
         self._params = params
 

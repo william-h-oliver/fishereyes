@@ -1,19 +1,24 @@
-# FisherEyes Core Module
+"""
+FisherEyes: A flexible framework for learning diffeomorphic transformations that 
+normalize heteroskedastic uncertainty.
+
+Author: William H. Oliver <william.hardie.oliver@gmail.com>
+License: MIT
+"""
 
 # Standard library imports
 import shutil
 from pathlib import Path
+from typing import Optional, Union, Dict, Any
 
 # Third-party library imports
 from omegaconf import OmegaConf
 import jax
 import jax.numpy as jnp
-from typing import Optional, Union, Dict, Any
-from jax.random import PRNGKey
-from fishereyes.utils.train_utils import loss_and_grad, update
 from tqdm import trange
 
 # Local library imports
+from fishereyes.utils.train_utils import loss_and_grad, update
 from fishereyes.models.registry import MODEL_REGISTRY
 from fishereyes.losses.registry import LOSS_REGISTRY
 from fishereyes.optimizers.registry import OPTIMIZER_REGISTRY
@@ -30,7 +35,7 @@ class FisherEyes:
         loss_fn: Any,
         epochs: int,
         batch_size: int,
-        config: Dict[str, Any] = {},
+        config: Dict[str, Any] = None,
     ) -> None:
         # Core components
         self.model = model
@@ -42,19 +47,59 @@ class FisherEyes:
         self.loss_history = []
 
         # Save full config for reproducibility/logging
-        self.config = config
+        self.config = config or {}
 
     @classmethod
     def from_config(
         cls,
         data_dim: int,
         config_path: Optional[Union[str, Path]] = None,
-        key: Optional[Union[PRNGKey, int]] = 0,
+        key: Optional[Union[jax.random.PRNGKey, int]] = None,
     ) -> "FisherEyes":
+        """
+        Create a FisherEyes instance from a configuration file.
+
+        Parameters:
+        - data_dim: Dimensionality of the input/output data.
+        - config_path: Path to the configuration file. If None, the default configuration is used.
+        - key: Optional jax.random.PRNGKey or integer seed for reproducibility.
+
+        Returns:
+        - An instance of the FisherEyes class.
+        """
         # === Load the full configuration ===
         config_path = config_path or DEFAULT_CONFIG_PATH
         config = OmegaConf.load(config_path)
         config = OmegaConf.to_container(config, resolve=True)
+
+        # === Validate the configuration ===
+        if not isinstance(data_dim, int):
+            raise TypeError(f"Expected data_dim to be an integer, got {type(data_dim)}.")
+        if data_dim <= 0:
+            raise ValueError(f"Expected data_dim to be a positive integer, got {data_dim}.")
+        if not isinstance(config, dict):
+            raise TypeError(f"Expected config to be a dictionary, got {type(config)}.")
+        for key in ["model", "optimizer", "loss", "training"]:
+            if key not in config:
+                raise KeyError(f"Missing required key '{key}' in configuration.")
+            if not isinstance(config[key], dict):
+                raise TypeError(f"Expected '{key}' to be a dictionary, got {type(config[key])}.")
+            if key == "training":
+                for subkey in ["epochs", "batch_size"]:
+                    if subkey not in config[key]:
+                        raise KeyError(f"Missing required key '{subkey}' in training configuration.")
+                    if not isinstance(config[key][subkey], int):
+                        raise TypeError(f"Expected '{subkey}' to be an integer, got {type(config[key][subkey])}.")
+                    if config[key][subkey] <= 0:
+                        raise ValueError(f"Expected '{subkey}' to be a positive integer, got {config[key][subkey]}.")
+            else:
+                for subkey in ["name", "params"]:
+                    if subkey not in config[key]:
+                        raise KeyError(f"Missing required key '{subkey}' in '{key}' configuration.")
+                if not isinstance(config[key]["name"], str):
+                    raise TypeError(f"Expected 'name' to be a string, got {type(config[key]['name'])}.")
+                if not isinstance(config[key]["params"], dict):
+                    raise TypeError(f"Expected 'params' to be a dictionary, got {type(config[key]['params'])}.")
 
         # === Update model config with input/output dimensions ===
         model_params = dict(config["model"]["params"])  # Make mutable copy
@@ -64,6 +109,8 @@ class FisherEyes:
             model_params['key'] = key
         elif isinstance(key, int):
             model_params['key'] = jax.random.PRNGKey(key)
+        else:
+            key = jax.random.PRNGKey(0)
 
         # === Instantiate model ===
         model_cls = MODEL_REGISTRY[config["model"]["name"]]
@@ -97,18 +144,12 @@ class FisherEyes:
     def as_config(self) -> Dict[str, Any]:
         """Return a dictionary representation of the current configuration."""
         return {
-            "model": {
-                "name": self.config.model.name,
-                "params": dict(self.config.model.params),
-            },
+            "model": self.model.as_config(),
             "optimizer": {
-                "name": self.config.optimizer.name,
-                "params": dict(self.config.optimizer.params),
+                "name": self.optimizer.name,
+                "params": self.optimizer.params,
             },
-            "loss": {
-                "name": self.config.loss.name,
-                "params": dict(self.config.loss.params),
-            },
+            "loss": self.loss_fn.as_config(),
             "training": {
                 "epochs": self.epochs,
                 "batch_size": self.batch_size,
@@ -127,14 +168,28 @@ class FisherEyes:
         Parameters:
         - y0: Input data array of shape [N, D]
         - sigma0: Covariance matrices of shape [N, D, D]
-        - key: Optional PRNGKey for reproducibility
+        - key: Optional jax.random.PRNGKey or integer seed for reproducibility.
         """
+        # === Validate inputs ===
+        if not isinstance(y0, jax.Array):
+            raise TypeError(f"Expected y0 to be a jax.Array, got {type(y0)}.")
+        if not isinstance(sigma0, jax.Array):
+            raise TypeError(f"Expected sigma0 to be a jax.Array, got {type(sigma0)}.")
+        if y0.ndim != 2:
+            raise ValueError(f"Expected y0 to have 2 dimensions, got {y0.ndim}.")
+        if sigma0.ndim != 3:
+            raise ValueError(f"Expected sigma0 to have 3 dimensions, got {sigma0.ndim}.")
+        if y0.shape[0] != sigma0.shape[0]:
+            raise ValueError(f"Expected y0 and sigma0 to have the same first dimension, got {y0.shape[0]} and {sigma0.shape[0]}.")
+        if y0.shape[1] != sigma0.shape[1] != sigma0.shape[2] != y0.shape[1]:
+            raise ValueError(f"Expected y0 and sigma0 to have the same last dimensions, got {y0.shape[1]} and {sigma0.shape[1]}.")
+        
         if isinstance(key, jax.Array):
-            self.key = key
+            pass
         elif isinstance(key, int):
-            self.key = jax.random.PRNGKey(key)
+            key = jax.random.PRNGKey(key)
         else:
-            self.key = jax.random.PRNGKey(0)
+            key = jax.random.PRNGKey(0)
 
         # Get number of samples
         num_samples = y0.shape[0]
@@ -144,10 +199,6 @@ class FisherEyes:
 
         # Retrieve initial state
         params = self.model.parameters()
-        if params is None:
-            key, subkey = jax.random.split(key)
-            params = self.model.init_parameters(y0.shape[1], y0.shape[1], subkey)
-            self.model.set_parameters(params)
         opt_state = self.opt_state
 
         # === Pre-process sigma0 ===

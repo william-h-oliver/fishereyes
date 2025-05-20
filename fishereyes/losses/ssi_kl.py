@@ -1,3 +1,7 @@
+# Standard imports
+from typing import Dict, Any
+
+# Third-party imports
 import jax
 import jax.numpy as jnp
 
@@ -7,7 +11,24 @@ class SymmetrizedScaleInvariantKL:
         # No hyperparameters for now, but leave __init__ for extensibility
         pass
 
-    def __call__(self, model, params, y0, eigvals0, eigvecs0):
+    def as_config(self) -> Dict[str, Any]:
+        """
+        Returns a dictionary representation of the loss function configuration.
+        This is useful for saving/loading configurations.
+        """
+        return {
+            "name": "SymmetrizedScaleInvariantKL",
+            "params": {}
+        }
+
+    def __call__(
+        self,
+        model: Any,
+        params: Any,
+        y0: jax.Array,
+        eigvals0: jax.Array,
+        eigvecs0: jax.Array,
+    ) -> jax.Array:
         """
         Compute the scale-invariant symmetrized KL loss for a batch.
 
@@ -32,7 +53,11 @@ class SymmetrizedScaleInvariantKL:
 
     @staticmethod
     @jax.jit
-    def _symmetrized_scale_invariant_KL_loss(J, eigvals, eigvecs):
+    def _symmetrized_scale_invariant_KL_loss(
+        J: jax.Array,
+        eigvals: jax.Array,
+        eigvecs: jax.Array,
+    ) -> jax.Array:
         # Transform the Jacobian to the eigenspace of sigma0
         J_tilde = jnp.einsum('nij,njk->nik', J, eigvecs)
 

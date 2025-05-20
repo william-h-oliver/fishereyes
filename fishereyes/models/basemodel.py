@@ -1,5 +1,6 @@
+# Standard imports
 from abc import ABC, abstractmethod
-
+from typing import Dict, Any
 
 class ConfigurableModel(ABC):
     """
@@ -7,7 +8,11 @@ class ConfigurableModel(ABC):
     """
 
     @classmethod
-    def from_config(cls, config: dict, **extra_kwargs):
+    def from_config(
+        cls,
+        config: Dict[str, Any],
+        **extra_kwargs: Dict[str, Any],
+    ) -> "ConfigurableModel":
         """
         Default implementation of `from_config` for models where:
         - Each submodel is specified by a {"name": ..., "params": ...} dict.
@@ -26,6 +31,14 @@ class ConfigurableModel(ABC):
                 constructor_dict[key] = value
 
         return cls(**constructor_dict, **extra_kwargs)
+
+    @abstractmethod
+    def as_config(self):
+        """
+        Convert the model instance to a configuration dictionary.
+        This should include all parameters needed to recreate the model.
+        """
+        pass
 
     @abstractmethod
     def __call__(self, *args, **kwargs):

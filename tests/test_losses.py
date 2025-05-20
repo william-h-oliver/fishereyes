@@ -1,10 +1,19 @@
+# Standard imports
+from typing import Tuple
+
+# Third-party imports
 import jax
 import jax.numpy as jnp
+
+# Local imports
 from fishereyes.losses.ssi_kl import SymmetrizedScaleInvariantKL
 from fishereyes.models.mlp import MLP
 
 
-def test_ssi_kl_loss_runs(dummy_data, key):
+def test_ssi_kl_loss_runs(
+    dummy_data: Tuple[jax.Array, jax.Array],
+    key: jax.random.PRNGKey,
+) -> None:
     y0, sigma0 = dummy_data
     model = MLP(input_dim=y0.shape[-1],
                 output_dim=y0.shape[-1],

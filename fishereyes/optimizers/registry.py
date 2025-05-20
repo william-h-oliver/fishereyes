@@ -1,3 +1,4 @@
+# Local imports
 from fishereyes.optimizers.adam import Adam
 
 OPTIMIZER_REGISTRY = {

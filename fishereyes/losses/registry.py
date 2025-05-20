@@ -1,3 +1,4 @@
+# Local imports
 from fishereyes.losses.ssi_kl import SymmetrizedScaleInvariantKL
 
 LOSS_REGISTRY = {

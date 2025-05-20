@@ -1,5 +1,5 @@
 # Third-party imports
-from jax import jit, value_and_grad
+from jax import value_and_grad
 import optax
 
 

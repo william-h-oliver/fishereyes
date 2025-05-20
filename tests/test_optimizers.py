@@ -1,10 +1,11 @@
-import jax
+# Third-party code
 import jax.numpy as jnp
 
+# Local imports
 from fishereyes.optimizers.registry import OPTIMIZER_REGISTRY
 
 
-def test_adam_optimizer_update():
+def test_adam_optimizer_update() -> None:
     optimizer = OPTIMIZER_REGISTRY["adam"](learning_rate=1e-2)
     params = {"w": jnp.ones((3, 3))}
     grads = {"w": jnp.full((3, 3), 0.5)}

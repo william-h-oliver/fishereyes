@@ -1,8 +1,12 @@
+# Standard imports
+from typing import Optional, Union, Dict, Any
+
+# Third-party imports
 import jax
 import jax.numpy as jnp
 from jax.experimental.ode import odeint
-from typing import Optional, Union, Any
 
+# Local imports
 from fishereyes.models.basemodel import ConfigurableModel
 
 
@@ -16,8 +20,8 @@ class NeuralODE(ConfigurableModel):
         time_length: float = 1.0,
         time_steps: int = 10,
         solver_params: Optional[dict] = None,
-        key: Optional[Union[jax.random.PRNGKey, int]] = 0,
-    ):
+        key: Optional[Union[jax.random.PRNGKey, int]] = None,
+    ) -> None:
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.vector_field = vector_field
@@ -29,11 +33,17 @@ class NeuralODE(ConfigurableModel):
             self.key = key
         elif isinstance(key, int):
             self.key = jax.random.PRNGKey(key)
+        else:
+            self.key = jax.random.PRNGKey(0)
 
         self.ts = jnp.linspace(0.0, time_length, time_steps)
     
     @classmethod
-    def from_config(cls, config: dict, **extra_kwargs):
+    def from_config(
+        cls,
+        config: Dict[str, Any],
+        **extra_kwargs
+    ) -> "NeuralODE":
         """
         Custom from_config for NeuralODE to handle dynamic input_dim logic and submodel instantiation.
         """
@@ -65,12 +75,27 @@ class NeuralODE(ConfigurableModel):
 
         return cls(**constructor_dict, **extra_kwargs)
 
+    def as_config(self) -> Dict[str, Any]:
+        """
+        Convert the model instance to a configuration dictionary.
+        This should include all parameters needed to recreate the model.
+        """
+        return {
+            "name": "NeuralODE",
+            "params": {
+                "vector_field": self.vector_field.as_config(),
+                "time_dependence": self.time_dependence,
+                "time_length": self.time_length,
+                "time_steps": self.time_steps,
+                "solver_params": self.solver_params,
+            }
+        }
 
     def __call__(
         self,
         y0: jax.Array,
         ts: Optional[jax.Array] = None,
-        params: Optional[Any] = None,
+        params: Optional[Dict[str, Any]] = None,
         final_state_only: bool = True
     ) -> jax.Array:
         ts = self.ts if ts is None else ts
@@ -96,11 +121,11 @@ class NeuralODE(ConfigurableModel):
             input_vector = y
         return self.vector_field(input_vector, params=params["vector_field"])
     
-    def parameters(self) -> Any:
+    def parameters(self) -> Dict[str, Any]:
         return {
             "vector_field": self.vector_field.parameters()
         }
 
-    def set_parameters(self, params: Any) -> None:
+    def set_parameters(self, params: Dict[str, Any]) -> None:
         self.vector_field.set_parameters(params["vector_field"])
 
