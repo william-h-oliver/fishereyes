@@ -184,7 +184,6 @@ class FisherEyes:
                 # Update parameters and optimizer state
                 params, opt_state = update(self.optimizer, params, opt_state, grads)
                 epoch_loss += loss_val * len(y0_batch)
-                num_samples += len(y0_batch)
             
             # Average loss over the epoch
             epoch_loss /= y0.shape[0]  # Normalize by number of samples
