@@ -46,7 +46,7 @@ fish.fit(y0, sigma0)
 
 ... and that's it, FisherEyes has found a diffeomorphic transformation of the data such that the push-forward covariance matrices are isotropic and homoskedastic!
 
-### Visualising the estimated density field of the input data
+### Visualising the transformation
 
 For low-dimensional input data, like we have in this example, it is then possible to visualize the
 uncertain data's transformation.
