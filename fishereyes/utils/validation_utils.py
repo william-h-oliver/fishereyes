@@ -71,3 +71,4 @@ def validate_input_data(
         raise ValueError(f"Expected y0 and sigma0 to have the same first dimension, got {y0.shape[0]} and {sigma0.shape[0]}.")
     if y0.shape[1] != sigma0.shape[1] or sigma0.shape[1] != sigma0.shape[2]:
         raise ValueError(f"Expected y0 and sigma0 to have compatible dimensions, got {y0.shape[1]} and {sigma0.shape[1]}.")
+    

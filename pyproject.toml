@@ -32,6 +32,7 @@ dependencies = [
     "optax",
     "omegaconf",
     "tqdm",
+    "matplotlib",
 ]
 
 [project.optional-dependencies]

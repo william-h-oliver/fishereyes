@@ -80,7 +80,6 @@ class NeuralODE(ConfigurableModel):
     ) -> jax.Array:
         ts = self.ts if ts is None else ts
         params = self.parameters() if params is None else params
-        print(f"y0 shape: {y0.shape}")
         paths = odeint(self._wrapped_vector_field, y0, ts, params)
         if final_state_only:
             return paths[-1]

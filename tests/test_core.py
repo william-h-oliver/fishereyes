@@ -35,16 +35,6 @@ def test_init_fishereyes(
     assert dummy_fishereyes.loss_history == [], "Loss history should be empty at initialization"
 
 
-def test_fit_runs(
-    dummy_fishereyes: FisherEyes,
-    dummy_data: Tuple[jax.Array, jax.Array],
-    key: jax.random.key,
-) -> None:
-    y0, sigma0 = dummy_data
-    dummy_fishereyes.fit(y0, sigma0, key)
-    assert dummy_fishereyes.loss_history, "Loss history should not be empty after training"
-
-
 def test_from_config_invalid(
     dummy_data: Tuple[jax.Array, jax.Array],
     dummy_invalid_config: str,
@@ -55,6 +45,16 @@ def test_from_config_invalid(
         FisherEyes.from_config(y0.shape[-1], config_path=dummy_invalid_config, key=key)
 
 
+def test_fit_runs(
+    dummy_fishereyes: FisherEyes,
+    dummy_data: Tuple[jax.Array, jax.Array],
+    key: jax.random.key,
+) -> None:
+    y0, sigma0 = dummy_data
+    dummy_fishereyes.fit(y0, sigma0, key)
+    assert dummy_fishereyes.loss_history, "Loss history should not be empty after training"
+
+
 def test_fit_invalid_inputs(
     dummy_fishereyes: FisherEyes,
     key: jax.random.key,
@@ -63,3 +63,27 @@ def test_fit_invalid_inputs(
     sigma0 = jnp.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]])  # Mismatched shapes
     with pytest.raises(ValueError):
         dummy_fishereyes.fit(y0, sigma0, key)
+
+
+def test_predict(
+    dummy_fishereyes: FisherEyes,
+    dummy_data: Tuple[jax.Array, jax.Array],
+) -> None:
+    """
+    Test the predict function of the FisherEyes class.
+    """
+    y0, sigma0 = dummy_data
+
+    # Call the predict function
+    y1, sigma1 = dummy_fishereyes.predict(y0, sigma0)
+
+    # Assert that the output shapes are correct
+    assert y1.shape == y0.shape, f"Expected y1 shape {y0.shape}, got {y1.shape}"
+    assert sigma1.shape == sigma0.shape, f"Expected sigma1 shape {sigma0.shape}, got {sigma1.shape}"
+
+    # Assert that the transformed covariance matrices are symmetric
+    assert jnp.allclose(sigma1, jnp.swapaxes(sigma1, -1, -2)), "Transformed covariance matrices should be symmetric"
+
+    # Assert that the transformed covariance matrices are positive semi-definite
+    eigvals = jnp.linalg.eigvalsh(sigma1)
+    assert jnp.all(eigvals >= 0), "Transformed covariance matrices should be positive semi-definite"

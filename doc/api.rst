@@ -1,9 +1,10 @@
-User API
-========
+API Reference
+=============
 
 .. toctree::
 
-This is an example function:
-
 .. automodule:: fishereyes
+    :members:
+
+.. automodule:: fishereyes.visualization
     :members:
