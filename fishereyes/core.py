@@ -9,6 +9,7 @@ License: MIT
 # Standard library imports
 import shutil
 from pathlib import Path
+from functools import partial
 from typing import Optional, Union, Dict, Any
 
 # Third-party library imports
@@ -223,6 +224,7 @@ class FisherEyes:
         epoch_loss = weighted_loss / mask_batches.sum()  # Normalize by number of samples
         return params, opt_state, epoch_loss
     
+    #@partial(jax.jit, static_argnums=(0,))
     def batch_step(self, train_state, batches):
         # Unpack train state and batches
         params, opt_state, weighted_loss = train_state

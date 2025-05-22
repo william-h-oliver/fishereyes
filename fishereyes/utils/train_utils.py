@@ -1,4 +1,5 @@
 # Standard imports
+from functools import partial
 from typing import Tuple
 
 # Third-party imports
@@ -6,7 +7,7 @@ import jax
 import jax.numpy as jnp
 import optax
 
-
+#@partial(jax.jit, static_argnums=(0,))
 def shuffle_and_split_batches(
     batch_size: int,
     y0: jax.Array,
@@ -62,7 +63,7 @@ def shuffle_and_split_batches(
 
     return (y0_batches, eigvals0_batches, eigvecs0_batches, mask_batches), key
 
-
+#@partial(jax.jit, static_argnums=(0, 1,))
 def loss_and_grad(model, loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_batch, mask_batch):
     """
     Compute the loss and gradients for a batch of data.
@@ -76,6 +77,7 @@ def loss_and_grad(model, loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_bat
     
     return loss_val, grads
 
+#@partial(jax.jit, static_argnums=(0,))
 def update(optimizer, params, opt_state, grads):
     """
     Update the model parameters and optimizer state.
