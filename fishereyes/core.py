@@ -173,13 +173,15 @@ class FisherEyes:
         # === Initialize key ===
         key = create_key(key)
 
-        # === Initialize model parameters ===
+        # === Initialize parameters ===
         params = self.model.parameters()
         opt_state = self.opt_state
+        self.loss_fn.calculate_optimal_alpha(eigvals0)
 
         # === Initialize progress bar ===
         terminal_width = shutil.get_terminal_size((80, 20)).columns
         pbar = trange(self.epochs, desc="Training", ncols=min(terminal_width, 160))
+        reference_loss = self.loss_fn.calculate_reference_loss(eigvals0)
 
         # === Training loop ===
         for epoch in pbar:
@@ -202,7 +204,7 @@ class FisherEyes:
 
             # Update progress bar
             pbar.set_description(f"Epoch {epoch+1:03d}")
-            pbar.set_postfix_str(f"loss = {epoch_loss:.6f}")
+            pbar.set_postfix_str(f"loss = {epoch_loss:.6f}, rel_loss = {100 *epoch_loss / reference_loss:.1f}%")
 
         # === Finalize training ===
         self.model.set_parameters(params)

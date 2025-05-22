@@ -5,11 +5,13 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 
+# Local imports
+from fishereyes.losses.baseloss import ConfigurableLoss
 
-class SymmetrizedScaleInvariantKL:
-    def __init__(self):
-        # No hyperparameters for now, but leave __init__ for extensibility
-        pass
+
+class SymmetrizedScaleInvariantKL(ConfigurableLoss):
+    def __init__(self, alpha = 1.0):
+        self.alpha = alpha
 
     def __call__(
         self,
@@ -39,7 +41,7 @@ class SymmetrizedScaleInvariantKL:
 
         J = jax.vmap(single_jac)(y0)  # shape (N, D, D)
 
-        return self._symmetrized_scale_invariant_KL_loss(J, eigvals0, eigvecs0)
+        return self._symmetrized_scale_invariant_KL_loss(J, eigvals0, eigvecs0, self.alpha)
 
     @staticmethod
     @jax.jit
@@ -47,6 +49,7 @@ class SymmetrizedScaleInvariantKL:
         J: jax.Array,
         eigvals: jax.Array,
         eigvecs: jax.Array,
+        alpha: float,
     ) -> jax.Array:
         # Transform the Jacobian to the eigenspace of sigma0
         J_tilde = jnp.einsum('nij,njk->nik', J, eigvecs)
@@ -62,4 +65,34 @@ class SymmetrizedScaleInvariantKL:
         sum_trace_Cinv = jnp.sum(row_norms_inv_squared / eigvals)
 
         n, d = eigvals.shape
-        return 0.5 * (jnp.sqrt(sum_trace_C * sum_trace_Cinv) / n - d)
+        return 0.5 * (sum_trace_C / alpha + sum_trace_Cinv * alpha) / n - d
+    
+    def calculate_optimal_alpha(self, eigvals: jax.Array) -> None:
+        """
+        Calculate the optimal alpha for the loss function.
+
+        Parameters:
+        - eigvals: Eigenvalues of the covariance matrix [N, D]
+        """
+        sum_trace_C = jnp.sum(eigvals)
+        sum_trace_Cinv = jnp.sum(1.0 / eigvals)
+        self.alpha = jnp.sqrt(sum_trace_C / sum_trace_Cinv)
+
+    def calculate_reference_loss(self, eigvals: jax.Array) -> jax.Array:
+        """
+        Calculate the reference loss for the loss function. Defined as the loss 
+        value when the model transformation is identity.
+
+        Parameters:
+        - eigvals: Eigenvalues of the covariance matrix [N, D]
+
+        Returns:
+        - Reference loss value
+        """
+
+        # Calculate the reference loss
+        sum_trace_C = jnp.sum(eigvals)
+        sum_trace_Cinv = jnp.sum(1.0 / eigvals)
+
+        n, d = eigvals.shape
+        return 0.5 * (sum_trace_C / self.alpha + sum_trace_Cinv * self.alpha) / n - d
