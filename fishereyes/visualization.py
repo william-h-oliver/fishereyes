@@ -87,10 +87,8 @@ def covariance_to_color(
     eigvals, eigvecs = jnp.linalg.eigh(sigma) # Eigendecomposition
 
     # === Calculate hues ===
-    angles = jnp.arctan2(jnp.max(eigvecs[:, :, -1], axis=1),
-                         jnp.min(eigvecs[:, :, -1], axis=1)) # Angle with horizontal axis
-    hues = (angles + jnp.pi) / jnp.pi # in [0, 2]
-    hues = jnp.where(hues > 1, hues - 1.0, hues) # Hue in [0, 1], keeps hue the same for opposite angles
+    angles = jnp.arctan2(eigvecs[:, 1, -1], eigvecs[:, 0, -1]) # Angle of the last eigenvector
+    hues = ((2 * angles) % (2 * jnp.pi)) / (2 * jnp.pi) # in [0, 1] with opposite directions mapping to the same color
 
     # === Calculate saturations ===
     ratios = jnp.clip(eigvals[:, -1] / eigvals[:, 0], 1.0, None)

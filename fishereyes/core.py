@@ -186,29 +186,57 @@ class FisherEyes:
         # === Training loop ===
         for epoch in pbar:
             # Shuffle and split data into batches
-            y0_batches, eigvals0_batches, eigvecs0_batches, key = shuffle_and_split_batches(self.batch_size, y0, eigvals0, eigvecs0, key)
+            batches, key = shuffle_and_split_batches(self.batch_size, y0, eigvals0, eigvecs0, key)
             
             # Loop over batches
-            epoch_loss = 0.0
-            for y0_batch, eigvals0_batch, eigvecs0_batch in zip(y0_batches, eigvals0_batches, eigvecs0_batches):
-                # Compute loss and gradients
-                loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_batch)
-                epoch_loss += loss_val * len(y0_batch)  # Accumulate loss over batches
-                
-                # Update parameters and optimizer state
-                params, opt_state = update(self.optimizer, params, opt_state, grads)
+            #epoch_loss = 0.0
+            #for y0_batch, eigvals0_batch, eigvecs0_batch in zip(y0_batches, eigvals0_batches, eigvecs0_batches):
+            #    # Compute loss and gradients
+            #    loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_batch)
+            #    epoch_loss += loss_val * len(y0_batch)  # Accumulate loss over batches
+            #    
+            #    # Update parameters and optimizer state
+            #    params, opt_state = update(self.optimizer, params, opt_state, grads)
+
+            params, opt_state, epoch_loss = self.epoch_train_step(params, opt_state, batches)
             
-            # Average loss over the epoch
-            epoch_loss /= y0.shape[0]  # Normalize by number of samples
+            # Track loss history
             self.loss_history.append(epoch_loss)
 
             # Update progress bar
             pbar.set_description(f"Epoch {epoch+1:03d}")
-            pbar.set_postfix_str(f"loss = {epoch_loss:.6f}, rel_loss = {100 *epoch_loss / reference_loss:.1f}%")
+            pbar.set_postfix_str(f"loss = {epoch_loss:.6f}, rel_loss = {100 * epoch_loss / reference_loss:.1f}%")
 
         # === Finalize training ===
         self.model.set_parameters(params)
         self.opt_state = opt_state
+
+    def epoch_train_step(self, params, opt_state, batches):
+        # Pack up the train state and batches
+        train_state = (params, opt_state, 0.0)  # Initialize train state with params, opt_state, and loss accumulator
+        
+        # Loop over batches
+        (params, opt_state, weighted_loss), _ = jax.lax.scan(self.batch_step, train_state, batches)
+
+        # Average loss over the epoch
+        mask_batches = batches[-1]  # Last batch contains the mask
+        epoch_loss = weighted_loss / mask_batches.sum()  # Normalize by number of samples
+        return params, opt_state, epoch_loss
+    
+    def batch_step(self, train_state, batches):
+        # Unpack train state and batches
+        params, opt_state, weighted_loss = train_state
+        y0_batch, eigvals0_batch, eigvecs0_batch, mask_batch = batches
+
+        # Compute loss and gradients
+        loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_batch, mask_batch)
+        weighted_loss += loss_val * mask_batch.sum()  # Accumulate loss over batches
+
+        # Update parameters and optimizer state
+        params, opt_state = update(self.optimizer, params, opt_state, grads)
+
+        return (params, opt_state, weighted_loss), None
+
     
     def predict(
         self,
