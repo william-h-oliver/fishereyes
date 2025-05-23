@@ -22,7 +22,6 @@ from tqdm import trange
 from fishereyes.models.registry import MODEL_REGISTRY
 from fishereyes.losses.registry import LOSS_REGISTRY
 from fishereyes.utils.train_utils import (
-    shuffle_and_split_batches,
     loss_and_grad,
     update,
 )
