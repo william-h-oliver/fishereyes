@@ -1,4 +1,5 @@
 # Standard imports
+from functools import partial
 from typing import List, Optional, Union, Dict, Any
 
 # Third-party imports
@@ -46,10 +47,18 @@ class MLP(ConfigurableModel):
     ) -> jax.Array:
         params = self._params if params is None else params
 
-        for i, layer in enumerate(params['layers']):
-            x = jnp.dot(x, layer['w']) + layer['b']
-            if i < len(params['layers']) - 1:
-                x = self.activation_fn(x)
+        return self._forward(x, self.activation_fn, params)
+    
+    @staticmethod
+    @partial(jax.jit, static_argnames=["activation_fn"])
+    def _forward(
+        x: jax.Array,
+        activation_fn: Any,
+        params: Dict[str, Any]
+    ) -> jax.Array:
+        # Do forward pass through the MLP
+        for layer in params['layers']:
+            x = activation_fn(jnp.dot(x, layer['w']) + layer['b'])
         return x
 
     def parameters(self) -> Dict[str, Any]:

@@ -90,7 +90,7 @@ class NeuralODE(ConfigurableModel):
         self,
         y: jax.Array,
         t: float,
-        params: Optional[Any]
+        params: Dict[str, Any],
     ) -> jax.Array:
         if self.time_dependence:
             # Add time as an additional input to the vector field

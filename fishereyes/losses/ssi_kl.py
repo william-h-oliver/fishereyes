@@ -34,7 +34,6 @@ class SymmetrizedScaleInvariantKL(ConfigurableLoss):
         Returns:
         - scalar loss value
         """
-
         # Compute Jacobians of model output w.r.t. inputs for each sample
         def single_jac(y):
             return jax.jacrev(lambda x: model(x, params=params))(y)  # shape (D, D)
@@ -60,7 +59,6 @@ class SymmetrizedScaleInvariantKL(ConfigurableLoss):
 
         # Inverse trace
         J_tilde_inv = jnp.linalg.inv(J_tilde)
-        # J_tilde_inv = jnp.linalg.solve(J_tilde, jnp.eye(J.shape[-1])) # Safer?
         row_norms_inv_squared = jnp.sum(J_tilde_inv**2, axis=2)
         sum_trace_Cinv = jnp.sum(row_norms_inv_squared / eigvals)
 
