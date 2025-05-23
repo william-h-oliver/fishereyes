@@ -71,7 +71,6 @@ class FisherEyes:
         opt_state: Any,
         loss_fn: Any,
         epochs: int,
-        batch_size: Optional[int] = None,
         config: Dict[str, Any] = None,
     ) -> None:
         # Core components
@@ -80,7 +79,6 @@ class FisherEyes:
         self.opt_state = opt_state
         self.loss_fn = loss_fn
         self.epochs = epochs
-        self.batch_size = batch_size
         self.config = config or {}
         
         self.loss_history = []
@@ -137,9 +135,6 @@ class FisherEyes:
         epochs = training_cfg["epochs"]
         if epochs == "None":
             epochs = 100
-        batch_size = training_cfg["batch_size"]
-        if batch_size == "None":
-            batch_size = None
 
         # === Return initialized instance ===
         return cls(
@@ -148,7 +143,6 @@ class FisherEyes:
             opt_state=opt_state,
             loss_fn=loss_fn,
             epochs=epochs,
-            batch_size=batch_size,
             config=config,
         )
 

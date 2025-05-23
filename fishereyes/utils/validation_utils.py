@@ -30,16 +30,12 @@ def validate_config(config: Dict[str, Any]) -> None:
         if not isinstance(config[key], dict):
             raise TypeError(f"Expected '{key}' to be a dictionary, got {type(config[key])}.")
         if key == "training":
-            for subkey in ["epochs", "batch_size"]:
-                if subkey not in config[key]:
-                    raise KeyError(f"Missing required key '{subkey}' in training configuration.")
-                if not isinstance(config[key][subkey], (int, str)):
-                    raise TypeError(f"Expected '{subkey}' to be an integer, got {type(config[key][subkey])}.")
-                if not (config[key][subkey] == "None" or config[key][subkey] > 0):
-                    raise ValueError(f"Expected '{subkey}' to be a positive integer or 'None', got {config[key][subkey]}.")
-                
-                if not isinstance(config[key][subkey], (int, str)):
-                    raise TypeError(f"Expected '{subkey}' to be an integer, got {type(config[key][subkey])}.")
+            if "epochs" not in config[key]:
+                raise KeyError(f"Missing required key `epochs` in training configuration.")
+            if not isinstance(config[key]["epochs"], (int, str)):
+                raise TypeError(f"Expected 'epochs' to be an integer, got {type(config[key]["epochs"])}.")
+            if not (config[key]["epochs"] == "None" or config[key]["epochs"] > 0):
+                raise ValueError(f"Expected 'epochs' to be a positive integer or 'None', got {config[key]["epochs"]}.")
         else:
             for subkey in ["name", "params"]:
                 if subkey not in config[key]:

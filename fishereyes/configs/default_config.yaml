@@ -24,4 +24,3 @@ loss:
 
 training:
   epochs: 100
-  batch_size: None

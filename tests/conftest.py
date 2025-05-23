@@ -46,7 +46,6 @@ def dummy_config(tmp_path) -> str:
       params: {}
     training:
       epochs: 2
-      batch_size: 8
     """)
     return str(config_path)
 

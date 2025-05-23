@@ -30,7 +30,6 @@ def test_init_fishereyes(
     assert dummy_fishereyes.opt_state is not None, "Optimizer state should be initialized"
     assert dummy_fishereyes.loss_fn is not None, "Loss function should be initialized"
     assert dummy_fishereyes.epochs > 0, "Epochs should be greater than 0"
-    assert dummy_fishereyes.batch_size > 0, "Batch size should be greater than 0"
     assert dummy_fishereyes.config is not None, "Config should be initialized"
     assert dummy_fishereyes.loss_history == [], "Loss history should be empty at initialization"
 
