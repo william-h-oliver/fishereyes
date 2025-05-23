@@ -137,6 +137,8 @@ class FisherEyes:
         training_cfg = config["training"]
         epochs = training_cfg["epochs"]
         batch_size = training_cfg["batch_size"]
+        if batch_size == 'None':
+            batch_size = None
 
         # === Return initialized instance ===
         return cls(
