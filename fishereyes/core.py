@@ -72,7 +72,7 @@ class FisherEyes:
         opt_state: Any,
         loss_fn: Any,
         epochs: int,
-        batch_size: int,
+        batch_size: Optional[int] = None,
         config: Dict[str, Any] = None,
     ) -> None:
         # Core components
@@ -186,14 +186,14 @@ class FisherEyes:
         # === Training loop ===
         for epoch in pbar:
             # Shuffle and split data into batches
-            y0_batches, eigvals0_batches, eigvecs0_batches, key = shuffle_and_split_batches(self.batch_size, y0, eigvals0, eigvecs0, key)
+            batches, key = shuffle_and_split_batches(y0.shape[0], self.batch_size, key)
             
             # Loop over batches
             epoch_loss = 0.0
-            for y0_batch, eigvals0_batch, eigvecs0_batch in zip(y0_batches, eigvals0_batches, eigvecs0_batches):
+            for batch in batches:
                 # Compute loss and gradients
-                loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_batch)
-                epoch_loss += loss_val * y0_batch.shape[0]  # Accumulate loss over batches
+                loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0[batch], eigvals0[batch], eigvecs0[batch])
+                epoch_loss += loss_val * batch.size  # Accumulate loss over batches
                 
                 # Update parameters and optimizer state
                 params, opt_state = update(self.optimizer, params, opt_state, grads)
