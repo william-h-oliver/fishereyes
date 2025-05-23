@@ -89,10 +89,10 @@ class SymmetrizedScaleInvariantKL(ConfigurableLoss):
         Returns:
         - Reference loss value
         """
-
-        # Calculate the reference loss
+        # Forward and inverse trace
         sum_trace_C = jnp.sum(eigvals)
         sum_trace_Cinv = jnp.sum(1.0 / eigvals)
 
+        # Calculate the reference loss
         n, d = eigvals.shape
         return 0.5 * (sum_trace_C / self.alpha + sum_trace_Cinv * self.alpha) / n - d

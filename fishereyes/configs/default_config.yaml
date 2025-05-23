@@ -10,13 +10,13 @@ model:
     time_length: 1.0
     time_steps: 10
     solver_params:
-      atol: 1e-6
-      rtol: 1e-6
+      atol: 1.4e-8
+      rtol: 1.4e-8
     
 optimizer:
   name: adam
   params:
-    learning_rate: 1e-3
+    learning_rate: 5e-3
 
 loss:
   name: ssiKLdiv

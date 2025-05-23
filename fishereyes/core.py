@@ -193,7 +193,7 @@ class FisherEyes:
             for y0_batch, eigvals0_batch, eigvecs0_batch in zip(y0_batches, eigvals0_batches, eigvecs0_batches):
                 # Compute loss and gradients
                 loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0_batch, eigvals0_batch, eigvecs0_batch)
-                epoch_loss += loss_val * len(y0_batch)  # Accumulate loss over batches
+                epoch_loss += loss_val * y0_batch.shape[0]  # Accumulate loss over batches
                 
                 # Update parameters and optimizer state
                 params, opt_state = update(self.optimizer, params, opt_state, grads)
@@ -204,7 +204,7 @@ class FisherEyes:
 
             # Update progress bar
             pbar.set_description(f"Epoch {epoch+1:03d}")
-            pbar.set_postfix_str(f"loss = {epoch_loss:.6f}, rel_loss = {100 *epoch_loss / reference_loss:.1f}%")
+            pbar.set_postfix_str(f"loss = {epoch_loss:.6f}, rel_loss = {100 * epoch_loss / reference_loss:.1f}%")
 
         # === Finalize training ===
         self.model.set_parameters(params)

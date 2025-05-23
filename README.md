@@ -40,8 +40,8 @@ sigma0 = jnp.eye(d) + jnp.einsum('ni,nj->nij', y0, y0) # Radial-dependent covari
 ```python
 from fishereyes import FisherEyes
 
-fish = FisherEyes.from_config(data_dim=y0.shape[-1], config_path=None, key=key)
-fish.fit(y0, sigma0)
+fishI = FisherEyes.from_config(data_dim=y0.shape[-1], config_path=None, key=key)
+fishI.fit(y0, sigma0)
 ```
 
 ... and that's it, FisherEyes has found a diffeomorphic transformation of the data such that the push-forward covariance matrices are isotropic and homoskedastic!
@@ -62,18 +62,18 @@ fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
 _, color_scale_max = visualization.scatter_colored_by_covariance_shape(y0, sigma0, ax=ax1)
 
 # Plot the transformed data
-y1, sigma1 = fish.predict(y0, sigma0)
+y1, sigma1 = fishI.predict(y0, sigma0)
 visualization.scatter_colored_by_covariance_shape(y1, sigma1, color_scale_max=color_scale_max, ax=ax2)
 
 # Tidy up
 ax1.set_title('Original data')
-ax1.set_xlabel('y[0]')
-ax1.set_ylabel('y[1]')
+ax1.set_xlabel(r'$y_0$[0]')
+ax1.set_ylabel(r'$y_0$[1]')
 ax1.set_aspect('equal')
-ax1.set_title('Transformed data')
-ax1.set_xlabel('f(y)[0]')
-ax1.set_ylabel('f(y)[1]')
-ax1.set_aspect('equal')
+ax2.set_title('Transformed data')
+ax2.set_xlabel(r'$f(y_0)$[0]')
+ax2.set_ylabel(r'$f(y_0)$[1]')
+ax2.set_aspect('equal')
 
 # Show plot
 plt.show()
