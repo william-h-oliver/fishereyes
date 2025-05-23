@@ -26,9 +26,11 @@ class MLP(ConfigurableModel):
         self.activation = activation
         self.key = create_key(key)
 
-        self.activation_fn = getattr(jnp, activation)
+        if hasattr(jnp, activation): self.activation_fn = getattr(jnp, activation)
+        elif hasattr(jax.nn, activation): self.activation_fn = getattr(jax.nn, activation)
+        else: raise ValueError(f"Activation function '{activation}' not found in jax.numpy or jax.nn modules.")
 
-        # Initialize parameters given dims and PRNG key
+        # Initialize parameters given dims and jax.random.key
         layers = []
         dims = [input_dim] + self.hidden_dims + [output_dim]
 
@@ -43,18 +45,16 @@ class MLP(ConfigurableModel):
     def __call__(
         self,
         x: jax.Array,
-        params: Optional[Dict[str, Any]] = None
+        params: Dict[str, Any],
     ) -> jax.Array:
-        params = self._params if params is None else params
-
-        return self._forward(x, self.activation_fn, params)
+        return self._forward(x, params, self.activation_fn)
     
     @staticmethod
     @partial(jax.jit, static_argnames=["activation_fn"])
     def _forward(
         x: jax.Array,
+        params: Dict[str, Any],
         activation_fn: Any,
-        params: Dict[str, Any]
     ) -> jax.Array:
         # Do forward pass through the MLP
         for layer in params['layers']:

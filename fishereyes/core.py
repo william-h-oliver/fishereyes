@@ -203,7 +203,6 @@ class FisherEyes:
         self,
         y0: jax.Array,         # shape [N, D]
         sigma0: jax.Array,     # shape [N, D, D]
-        kwargs: Optional[Dict[str, Any]] = None,
     ) -> jax.Array:
         """
         Predict the transformed data.
@@ -211,7 +210,6 @@ class FisherEyes:
         Parameters:
         - y0: Input data array of shape [N, D]
         - sigma0: Covariance matrices of shape [N, D, D]
-        - kwargs: Optional additional arguments for the model
 
         Returns:
         - Transformed data array of shape [N, D]
@@ -219,17 +217,14 @@ class FisherEyes:
         """
         # === Validate inputs ===
         validate_input_data(y0, sigma0)
-        if kwargs is None:
-            kwargs = {}
-        if not isinstance(kwargs, dict):
-            raise TypeError(f"Expected kwargs to be a dictionary, got {type(kwargs)}.")
 
         # === Transform point data ===
-        y1 = self.model(y0, **kwargs)
+        params = self.model.parameters()
+        y1 = self.model(y0, params)
 
         # === Compute Jacobians ===
         def single_jac(y):
-            return jax.jacrev(lambda x: self.model(x, **kwargs))(y)  # shape (D, D)
+            return jax.jacrev(lambda x: self.model(x, params))(y)  # shape (D, D)
         J = jax.vmap(single_jac)(y0)  # shape (N, D, D)
 
         # === Transform covariance matrices ===

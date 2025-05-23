@@ -74,17 +74,9 @@ class NeuralODE(ConfigurableModel):
     def __call__(
         self,
         y0: jax.Array,
-        ts: Optional[jax.Array] = None,
-        params: Optional[Dict[str, Any]] = None,
-        final_state_only: bool = True
+        params: Dict[str, Any],
     ) -> jax.Array:
-        ts = self.ts if ts is None else ts
-        params = self.parameters() if params is None else params
-        paths = odeint(self._wrapped_vector_field, y0, ts, params)
-        if final_state_only:
-            return paths[-1]
-        else:
-            return paths
+        return odeint(self._wrapped_vector_field, y0, self.ts, params)[-1]
 
     def _wrapped_vector_field(
         self,
@@ -98,13 +90,11 @@ class NeuralODE(ConfigurableModel):
             input_vector = jnp.concatenate((y, time_input), axis=-1)
         else:
             input_vector = y
-        return self.vector_field(input_vector, params=params["vector_field"])
+        return self.vector_field(input_vector, params=params)
     
     def parameters(self) -> Dict[str, Any]:
-        return {
-            "vector_field": self.vector_field.parameters()
-        }
+        return self.vector_field.parameters()
 
     def set_parameters(self, params: Dict[str, Any]) -> None:
-        self.vector_field.set_parameters(params["vector_field"])
+        self.vector_field.set_parameters(params)
 

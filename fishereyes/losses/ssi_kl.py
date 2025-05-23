@@ -1,6 +1,3 @@
-# Standard imports
-from typing import Any
-
 # Third-party imports
 import jax
 import jax.numpy as jnp
@@ -15,9 +12,7 @@ class SymmetrizedScaleInvariantKL(ConfigurableLoss):
 
     def __call__(
         self,
-        model: Any,
-        params: Any,
-        y0: jax.Array,
+        J: jax.Array,
         eigvals0: jax.Array,
         eigvecs0: jax.Array,
     ) -> jax.Array:
@@ -25,21 +20,14 @@ class SymmetrizedScaleInvariantKL(ConfigurableLoss):
         Compute the scale-invariant symmetrized KL loss for a batch.
 
         Parameters:
-        - model: A callable model (e.g. MLP or NeuralODE)
-        - params: Model parameters
-        - y0: Input data [N, D]
+        - J: Jacobian of the model output w.r.t. inputs [N, D, D]
         - eigvals0: Eigenvalues of the covariance matrix [N, D]
         - eigvecs0: Eigenvectors of the covariance matrix [N, D, D]
 
         Returns:
         - scalar loss value
         """
-        # Compute Jacobians of model output w.r.t. inputs for each sample
-        def single_jac(y):
-            return jax.jacrev(lambda x: model(x, params=params))(y)  # shape (D, D)
-
-        J = jax.vmap(single_jac)(y0)  # shape (N, D, D)
-
+        # Compute loss
         return self._symmetrized_scale_invariant_KL_loss(J, eigvals0, eigvecs0, self.alpha)
 
     @staticmethod

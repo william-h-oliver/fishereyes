@@ -41,7 +41,13 @@ def loss_and_grad(
     """
     # Define a wrapped loss function to compute gradients
     def loss_fn_wrapped(params):
-        return loss_fn(model, params, y0, eigvals0, eigvecs0)
+        # Compute Jacobians of model output w.r.t. inputs for each sample
+        model_with_params = lambda x: model(x, params)
+        single_jacobian = jax.jacrev(model_with_params)
+        J = jax.vmap(single_jacobian)(y0)  # shape (N, D, D)
+
+        # Compute the loss
+        return loss_fn(J, eigvals0, eigvecs0)
 
     # Compute the loss and gradients
     loss_val, grads = jax.value_and_grad(loss_fn_wrapped)(params)

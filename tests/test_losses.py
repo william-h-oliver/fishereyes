@@ -33,11 +33,17 @@ def test_ssi_kl_loss_computation(
                 key=key)
     params = model.parameters()
 
-
+    # Instiantiate loss function class object
     loss_cls = LOSS_REGISTRY["ssiKLdiv"]
     loss_fn = loss_cls()
 
+    # Compute Jacobians of model output w.r.t. inputs for each sample
+    def single_jacobian(y):
+        return jax.jacrev(lambda x: model(x, params))(y)  # shape (D, D)
+
+    J = jax.vmap(single_jacobian)(y0)  # shape (N, D, D)
+
     # Compute loss
-    loss = loss_fn(model, params, y0, eigvals0, eigvecs0)
+    loss = loss_fn(J, eigvals0, eigvecs0)
     assert isinstance(loss, jax.Array) and loss.shape == (), "Loss should be a scalar"
     assert loss >= 0, "Loss should be non-negative"
