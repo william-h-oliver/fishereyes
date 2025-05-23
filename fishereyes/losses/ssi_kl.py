@@ -69,13 +69,17 @@ class SymmetrizedScaleInvariantKL(ConfigurableLoss):
     
     def calculate_optimal_alpha(self, eigvals: jax.Array) -> None:
         """
-        Calculate the optimal alpha for the loss function.
+        Calculate the optimal alpha for the loss function. Defined as the scalar 
+        value that minimizes the loss when the model transformation is identity.
 
         Parameters:
         - eigvals: Eigenvalues of the covariance matrix [N, D]
         """
+        # Forward and inverse trace
         sum_trace_C = jnp.sum(eigvals)
         sum_trace_Cinv = jnp.sum(1.0 / eigvals)
+
+        # Calculate the optimal alpha that minimizes the loss given null transformation
         self.alpha = jnp.sqrt(sum_trace_C / sum_trace_Cinv)
 
     def calculate_reference_loss(self, eigvals: jax.Array) -> jax.Array:
