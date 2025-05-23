@@ -189,21 +189,13 @@ class FisherEyes:
 
         # === Training loop ===
         for epoch in pbar:
-            # Shuffle and split data into batches
-            batches, key = shuffle_and_split_batches(y0.shape[0], self.batch_size, key)
+            # Compute loss and gradients
+            epoch_loss, grads = loss_and_grad(self.model, self.loss_fn, params, y0, eigvals0, eigvecs0)
             
-            # Loop over batches
-            epoch_loss = 0.0
-            for batch in batches:
-                # Compute loss and gradients
-                loss_val, grads = loss_and_grad(self.model, self.loss_fn, params, y0[batch], eigvals0[batch], eigvecs0[batch])
-                epoch_loss += loss_val * batch.size  # Accumulate loss over batches
-                
-                # Update parameters and optimizer state
-                params, opt_state = update(self.optimizer, params, opt_state, grads)
+            # Update parameters and optimizer state
+            params, opt_state = update(self.optimizer, params, opt_state, grads)
             
-            # Average loss over the epoch
-            epoch_loss /= y0.shape[0]  # Normalize by number of samples
+            # Store loss history
             self.loss_history.append(epoch_loss)
 
             # Update progress bar
