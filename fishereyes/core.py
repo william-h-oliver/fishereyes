@@ -136,8 +136,10 @@ class FisherEyes:
         # === Unpack training config ===
         training_cfg = config["training"]
         epochs = training_cfg["epochs"]
+        if epochs == "None":
+            epochs = 100
         batch_size = training_cfg["batch_size"]
-        if batch_size == 'None':
+        if batch_size == "None":
             batch_size = None
 
         # === Return initialized instance ===

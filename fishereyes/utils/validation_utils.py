@@ -33,10 +33,13 @@ def validate_config(config: Dict[str, Any]) -> None:
             for subkey in ["epochs", "batch_size"]:
                 if subkey not in config[key]:
                     raise KeyError(f"Missing required key '{subkey}' in training configuration.")
-                if not isinstance(config[key][subkey], int):
+                if not isinstance(config[key][subkey], (int, str)):
                     raise TypeError(f"Expected '{subkey}' to be an integer, got {type(config[key][subkey])}.")
-                if config[key][subkey] <= 0:
-                    raise ValueError(f"Expected '{subkey}' to be a positive integer, got {config[key][subkey]}.")
+                if not (config[key][subkey] == "None" or config[key][subkey] > 0):
+                    raise ValueError(f"Expected '{subkey}' to be a positive integer or 'None', got {config[key][subkey]}.")
+                
+                if not isinstance(config[key][subkey], (int, str)):
+                    raise TypeError(f"Expected '{subkey}' to be an integer, got {type(config[key][subkey])}.")
         else:
             for subkey in ["name", "params"]:
                 if subkey not in config[key]:
